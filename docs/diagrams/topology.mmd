@@ -1,0 +1,14 @@
+flowchart TD
+    subgraph EC["EtherCAT Network"]
+        E1["Edge #1 — Demo Control System"]
+        P["Physical Devices — Drives / I/O"]
+        E2["Edge #2 — Soft ESC"]
+        E1 <-->|EtherCAT| P
+        P <-->|EtherCAT| E2
+    end
+    N["Ethernet Switch / Wi-Fi AP"]
+    E1 <-->|Ethernet| N
+    E2 <-->|Ethernet| N
+    N <-->|Ethernet| W["Workstation — Digital Twin"]
+    T["Tablet — HMI"] <-->|Wi-Fi| N
+    D["DualSense — Pendant"] -->|Bluetooth| E1

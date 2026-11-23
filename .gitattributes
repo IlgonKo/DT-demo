@@ -1,0 +1,8 @@
+* text=auto
+*.md text eol=lf
+*.mmd text eol=lf
+*.json text eol=lf
+*.png binary
+*.docx binary
+*.pdf binary
+*.pptx binary

@@ -1,0 +1,19 @@
+flowchart TD
+    U["Tablet HMI / Teaching Pendant"] --> O
+    subgraph C["Demo Control System"]
+        O["Orchestrator"]
+        M["Motion Server"]
+        O -->|"Device commands / Parameters"| M
+        M -->|"Device states / Diagnostics"| O
+    end
+    M <-->|EtherCAT| B["Shared EtherCAT Bus"]
+    B <--> P["Physical Devices"]
+    B <--> V
+    subgraph S["Virtual Devices — Soft ESC"]
+        V["EtherCAT Slave Interface"]
+        F["Device Behavior Model"]
+        V -->|"Commands / Parameters"| F
+        F -->|"Calculated states"| V
+    end
+    O -->|"Virtual device states — All modes"| D["Digital Twin — Omniverse"]
+    D -.->|"Collision / Validation feedback"| O

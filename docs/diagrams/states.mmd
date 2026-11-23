@@ -1,0 +1,13 @@
+stateDiagram-v2
+    direction TB
+    [*] --> Init: 시스템 시작
+    Init --> Ready: 초기화 완료 / 정지·준비 확인
+    Ready --> Running: 실행 요청 / 실행 조건 충족
+    Running --> Ready: 실행 종료 또는 통상 정지 완료
+    Init --> Fault: 운전 차단 이상 / 필수 확인 실패
+    Ready --> Fault: 운전 차단 이상
+    Running --> Fault: 운전 차단 이상
+    Fault --> Ready: 원인 해소 / Reset / Acknowledge / 복구 확인
+    Ready --> Init: 사용자 재초기화 요청
+    Running --> Init: 사용자 재초기화 요청 / 정지 완료 또는 대기시간 만료
+    Fault --> Init: 사용자 재초기화 요청
