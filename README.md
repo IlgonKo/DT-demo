@@ -12,6 +12,9 @@ Fieldbus 기반 Digital Twin 데모의 합의 내용, 시스템 사양 및 발�
 | [합의 작업 문서](docs/agreements/DT_Demo_Working_Agreements.md) | 상세 합의·결정 기록 및 구현 시 확정 항목. 기준 Version 62 |
 | [Overview & Architecture — PowerPoint](presentations/Festo_DT_Demo_Overview_Architecture_v5.pptx) | 10장. Detail Specification 제외 |
 | [관계도](docs/diagrams) | 시스템·네트워크·상태 관계도의 Mermaid 원본과 PNG |
+| [Orchestrator Architecture](docs/design/orchestrator/architecture.md) | Function Block 기반 Modular Monolith 설계 초안 |
+| [Orchestrator Implementation Plan](docs/planning/orchestrator-implementation-plan.md) | 12월 Milestone, 역할 분담 및 Acceptance Criteria 초안 |
+| [Repository 구성 제안](docs/design/orchestrator/repository-strategy.md) | Repository 비교, 목표 구조 및 외부 버전 관리 방안 · 미확정 |
 
 ## 데모 범위
 

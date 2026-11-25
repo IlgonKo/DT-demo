@@ -42,6 +42,8 @@ Command는 typed method 및 결과, Event는 비동기 큐, State는 immutable/r
 
 DT-demo에 Orchestrator와 HMI를 함께 유지하고 motion-server 및 ethercat-device-simulator는 기존 독립 Repository로 유지한다. 사양/구현/통합 테스트를 같은 변경 단위로 관리한다. 기존 docs/agreements, docs/specifications, presentations 유지. 추가: docs/design/orchestrator, docs/planning, docs/validation, orchestrator/{core,interfaces,devices,operations,setup,recipes}, hmi, config, recipes, tests/{unit,integration,system}, Dockerfile, compose.yaml. 외부 두 Repository의 검증 버전/commit을 기록한다. 범용 Core의 별도 제품화 요구가 생기면 분리를 재검토한다.
 
+상세 비교표, 목표 디렉터리별 책임, 외부 의존성 버전 기록 및 향후 분리 기준은 [Repository 구성 제안](repository-strategy.md)에 정리한다. 이 구성은 최종 합의 전 검토 초안이다.
+
 ## 8. 후속 설계
 
 Public Interface, 공통 Command/Event/State 모델, 동시성 및 취소 계약, 기존 Motion Server TCP 및 Gamepad 코드 재사용 범위를 확정한다.
