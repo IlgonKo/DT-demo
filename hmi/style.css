@@ -20,3 +20,12 @@ button:focus-visible, input:focus-visible { outline: 2px solid #007fa6; outline-
 form { margin: 1rem 0; }
 input { width: 10rem; }
 #fault { color: #92241f; }
+
+.axis-table { overflow-x: auto; margin-bottom: .8rem; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: .55rem; text-align: left; border-bottom: 1px solid #ccd9e2; }
+td .actions { min-width: 13rem; }
+input.selected { width: auto; min-height: auto; }
+input.target { width: 6rem; }
+.mode { margin-top: .8rem; }
+select { padding: .45rem; font: inherit; }

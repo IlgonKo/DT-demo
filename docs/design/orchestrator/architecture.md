@@ -59,7 +59,7 @@ Orchestrator와 HMI는 DT-demo에서 함께 관리한다. Motion Server와 Soft 
 
 ## 단계별 범위와 검증 환경
 
-- **M1**은 수동 운전, HMI·Pendant, DT/Sync, Omniverse Follow 및 Collision/Stop/Fault 통합이다. 처음 제안한 브라우저→가상 X1→상태 표시→Stop→Ready 흐름의 범위는 구현 착수 전에 검토한다.
+- **M1**은 수동 운전, HMI·Pendant, DT/Sync, Omniverse Follow 및 Collision/Stop/Fault 통합이다. 준비된 가상 환경에서 HMI 다축 PP, Pendant 다축 PV와 속도 제한, 공통 Stop을 확인했다.
 - **M2**는 티칭·Recipe, Auto와 반복 운전, Parameter/PDO Pairing 및 State Alignment 통합이다.
 - **첫 통합 시험 환경**은 사용자가 준비한 Motion Server + Soft ESC 구성이다. 사용자가 설명한 구성에는 실제 축이 연결되어 있지 않다. 시험 실행과 결과 기록은 구현 착수 이후에 진행한다.
 - **Phase 2**에서는 기존 CMMT-AS FMU의 Omniverse 물리 연동, Adapter 확장과 Time Gear를 검토한다. Festo AX는 후속 범위다.
@@ -71,4 +71,4 @@ Orchestrator와 HMI는 DT-demo에서 함께 관리한다. Motion Server와 Soft 
 - HMI Quick Stop의 명령 경로, 대상 및 시스템 상태 처리를 확인한다. [Motion Server 연동 확인](modules/motion-server-interface.md#연동-확인)
 - Omniverse 담당자와 ROS 2 토픽·메시지·단위, USD/채널 매핑, 충돌 발행과 해소 조건을 확인한다. [Omniverse Interface](modules/omniverse-interface.md)
 
-첫 구현 범위는 DT Manual의 가상 X1이다. 시험 단계와 각 Milestone의 판정 기준은 [개발 계획](../../planning/orchestrator-implementation-plan.md)에 있다. 시스템 기능 기준과 결정 이력은 [시스템 사양서](../../specifications/DT_Demo_System_Specification.md)와 [합의 기록](../../agreements/DT_Demo_Working_Agreements.md)을 따른다.
+현재 구현 범위는 DT Manual의 가상 X1·Y·Z다. 시험 단계와 각 Milestone의 판정 기준은 [개발 계획](../../planning/orchestrator-implementation-plan.md)에 있다. 시스템 기능 기준과 결정 이력은 [시스템 사양서](../../specifications/DT_Demo_System_Specification.md)와 [합의 기록](../../agreements/DT_Demo_Working_Agreements.md)을 따른다.

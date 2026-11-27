@@ -9,7 +9,7 @@
 </head>
 <body>
   <main>
-    <header><h1>DT Demo 수동 운전</h1><span class="tag">DT · 가상 X1</span></header>
+    <header><h1>DT Demo 수동 운전</h1><span class="tag">DT · 가상 X1/Y/Z</span></header>
     <p id="connection" role="status">상태 연결 중</p>
     <section>
       <h2>운전 상태</h2>
@@ -25,31 +25,33 @@
         <button id="claim" disabled>제어권 획득</button>
         <button id="release" disabled>제어권 반납</button>
       </div>
+      <div class="actions mode">
+        <label for="pendant-mode">Pendant 모드</label>
+        <select id="pendant-mode" disabled><option value="Single">단축 Jog</option><option value="Multi">다축 PV</option></select>
+        <label for="pendant-axis">단축 대상</label>
+        <select id="pendant-axis" disabled><option>X1</option><option>Y</option><option>Z</option></select>
+      </div>
     </section>
     <section>
-      <h2>가상 X1</h2>
-      <dl>
-        <div><dt>위치</dt><dd id="position">—</dd></div>
-        <div><dt>속도</dt><dd id="velocity">—</dd></div>
-        <div><dt>Servo</dt><dd id="servo">—</dd></div>
-        <div><dt>이동</dt><dd id="moving">—</dd></div>
-      </dl>
-      <div class="actions">
-        <button data-motion="enable" disabled>Servo On</button>
-        <button data-motion="home" disabled>Homing</button>
-        <button data-jog="negative" disabled>Jog −</button>
-        <button data-jog="positive" disabled>Jog +</button>
-      </div>
+      <h2>가상 축</h2>
       <form id="move">
-        <label for="target">PP 목표 위치 (mm)</label>
-        <div class="actions"><input id="target" type="number" step="any" required>
-          <button data-motion="pp" disabled>PP 이동</button></div>
+        <div class="axis-table">
+          <table>
+            <thead><tr><th>대상</th><th>위치 (mm)</th><th>속도 (mm/s)</th><th>상태</th><th>PP 목표 (mm)</th><th>축 조작</th></tr></thead>
+            <tbody id="axes"></tbody>
+          </table>
+        </div>
+        <div class="actions">
+          <button id="enable-all" type="button" disabled>전체 Servo On</button>
+          <button id="pp" disabled>선택 축 PP 실행</button>
+        </div>
       </form>
       <div class="actions">
-        <button id="stop" class="stop">Stop</button>
-        <button id="disable">Servo Off</button>
+        <button id="stop" class="stop">공통 Stop</button>
+        <button id="disable">전체 Servo Off</button>
         <button id="recover" disabled>Fault 해제</button>
       </div>
+      <p id="pv" role="status" hidden></p>
       <p id="notice" role="status"></p>
       <p id="fault" role="alert"></p>
     </section>

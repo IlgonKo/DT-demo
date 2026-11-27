@@ -26,8 +26,8 @@ Soft ESC 기반 패키지는 사용자 확인에 따라 완료로 기록한다. 
 | Soft ESC 기반 패키지 | 완료 · 2026-11-27 | 사용자 확인. 준비된 Motion Server + Soft ESC 구성에서 가상 축·Loader I/O와 Edge #2 연동을 확인하는 작업은 DT Demo 통합 검증에 포함 |
 | Motion Server 기반 패키지 | 내부 1.0 기준선 커밋 반영 | 내부 1.0 기준선 및 기능·범위 문서 반영, TD-043~046 후속 작업 등록. DT Demo에 필요한 API와 제약은 11/27부터 확인 |
 | Architecture/API 및 Omniverse 연동 | Orchestrator 사양 문서화 · 외부 연동 확인 대기 | Overall·모듈별 책임과 명령/상태/Stop 정책 문서화. 시험용 장치·I/O 매핑과 Motion Server·Omniverse 계약 실값 확인 필요 |
-| Orchestrator/HMI 구현 | 가상 X1 단축 착수 | 기존 Motion Server TCP API와 준비된 Soft ESC 환경을 기준으로 HMI·Pendant 수동 경로 구현 |
-| M1/M2 통합 검증 | L2 가상 X1 일부 확인 | 웹 HMI·물리 DualSense의 가상 X1 검증 및 Bluetooth 단절·재연결 확인. M1 전체 및 M2는 미실시. [가상 X1 검증 기록](../validation/2026-11-27-virtual-x1-manual.md) |
+| Orchestrator/HMI 구현 | 가상 X1·Y·Z 수동 운전 구현 | HMI 다축 PP, Pendant 다축 PV·속도 제한과 공통 Stop 확인 |
+| M1/M2 통합 검증 | L2 가상 3축 수동 운전 확인 | HMI PP, 물리 DualSense 다축 PV·속도 제한, 공통 Stop 확인. M1 전체 및 M2는 미실시. [가상 3축 검증 기록](../validation/2026-11-27-virtual-xyz-manual.md) |
 
 이전 진행 기록의 참조 커밋은 Soft ESC `e8ad0b9`, Motion Server `eff4d12`다. 시험에 실제 사용한 버전 조합과 RF별 검증 결과는 DT Demo 통합 검증 기록에 남긴다.
 
@@ -109,7 +109,7 @@ M1에는 Parameter Pairing/State Alignment 자동화가 없으므로 초기 위�
 
 첫 연결에서는 준비된 환경의 실제 가상축 매핑과 응답·피드백부터 확인한다. 실축 Sync와 Omniverse 연동은 M1 통합 항목으로 따로 검증한다. HMI 독립 Quick Stop은 통합 대상 Motion Server 버전의 호출 경로를 확인한 뒤 시험한다.
 
-가상 X1 단축 구현부터 착수한다. 통합 결과는 준비된 환경에서 시험한 뒤 기록한다.
+가상 X1 단축과 가상 3축 PP/PV 시험 결과를 기록했다. Loader는 후속 L2 검증 범위다.
 
 ## 7. 외부 의존성 및 Risk
 

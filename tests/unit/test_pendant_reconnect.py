@@ -21,6 +21,7 @@ class PendantReconnectTest(unittest.IsolatedAsyncioTestCase):
         reader.poll.side_effect = poll
         controller = SimpleNamespace(
             source='Pendant', state='Ready', pendant_connected=False,
+            pendant_mode='Single', pendant_axis='X1',
             devices=SimpleNamespace(motion=SimpleNamespace(connected=True)),
             dispatch=Mock(), hold=Mock(), input_lost=Mock(),
         )
@@ -34,9 +35,9 @@ class PendantReconnectTest(unittest.IsolatedAsyncioTestCase):
             return [call for call in controller.dispatch.call_args_list
                     if call.args[0] == 'jog']
 
-        neutral = (0.0, False, False, False)
-        trigger = (0.0, True, False, False)
-        stick_held = (0.8, True, False, False)
+        neutral = ((0.0, 0.0, 0.0), False, False, False)
+        trigger = ((0.0, 0.0, 0.0), True, False, False)
+        stick_held = ((0.8, 0.0, 0.0), True, False, False)
 
         with patch('orchestrator.interfaces.pendant.input.PendantInput', return_value=reader):
             task = asyncio.create_task(read_pendant(controller))

@@ -7,14 +7,19 @@ from pydantic import BaseModel, Field, FiniteFloat
 
 from orchestrator.core.system_controller import CommandRejected
 
+Axis = Literal['X1', 'Y', 'Z']
+
 router = APIRouter()
 
 
 class Command(BaseModel):
-    action: Literal['authority', 'enable', 'disable', 'home', 'pp', 'jog', 'stop', 'recover', 'source']
+    action: Literal['authority', 'enable', 'disable', 'home', 'pp', 'jog', 'stop', 'recover', 'source', 'pendant_setup']
     enabled: bool | None = None
     direction: Literal['positive', 'negative'] | None = None
-    position: FiniteFloat | None = None
+    positions: dict[Axis, FiniteFloat] | None = None
+    axes: list[Axis] | None = None
+    pendant_mode: Literal['Single', 'Multi'] | None = None
+    pendant_axis: Axis | None = None
     source: Literal['HMI', 'Pendant'] | None = None
     hold: str | None = Field(default=None, min_length=1, max_length=80)
 
@@ -32,14 +37,18 @@ async def command(payload: Command, request: Request):
             if payload.source is None:
                 raise CommandRejected('조작 소스를 지정하세요.')
             controller.change_source(payload.source)
+        elif payload.action == 'pendant_setup':
+            if payload.pendant_mode is None and payload.pendant_axis is None:
+                raise CommandRejected('Pendant 설정을 지정하세요.')
+            controller.change_pendant(payload.pendant_mode, payload.pendant_axis)
         else:
             fields = {
-                'authority': ('enabled',), 'jog': ('direction', 'hold'), 'pp': ('position',),
+                'authority': ('enabled',), 'jog': ('direction', 'hold'), 'pp': ('positions',),
             }.get(payload.action, ())
             data = {name: getattr(payload, name) for name in fields}
             if any(value is None for value in data.values()):
                 raise CommandRejected('명령의 필수 입력값을 지정하세요.')
-            controller.dispatch(payload.action, **data)
+            controller.dispatch(payload.action, axes=payload.axes, **data)
     except CommandRejected as error:
         return rejected(error)
     return {'accepted': True}

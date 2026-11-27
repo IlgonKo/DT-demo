@@ -4,13 +4,14 @@ from concurrent.futures import ThreadPoolExecutor
 from uuid import uuid4
 
 from orchestrator.core.system_controller import CommandRejected
+from orchestrator.devices.device_manager import AXES
 
 
 class PendantInput:
     def __init__(self):
         self.config = {
             key: int(os.environ.get(f'DT_PENDANT_{key}', default))
-            for key, default in {'STICK': 0, 'TRIGGER': 4, 'HOME': 3, 'STOP': 1}.items()
+            for key, default in {'STICK': 0, 'Y': 1, 'Z': 3, 'TRIGGER': 4, 'HOME': 3, 'STOP': 1}.items()
         }
         self.joystick = None
         self.instance_id = None
@@ -30,7 +31,7 @@ class PendantInput:
             if not any(name in candidate.get_name().lower()
                        for name in ('dualsense', 'wireless controller', 'ps5')):
                 continue
-            if (max(self.config['STICK'], self.config['TRIGGER']) < candidate.get_numaxes()
+            if (max(self.config[key] for key in ('STICK', 'Y', 'Z', 'TRIGGER')) < candidate.get_numaxes()
                     and max(self.config['HOME'], self.config['STOP']) < candidate.get_numbuttons()):
                 self.joystick = candidate
                 self.instance_id = candidate.get_instance_id()
@@ -52,7 +53,8 @@ class PendantInput:
             if self.joystick is None:
                 return None
             return (
-                self.joystick.get_axis(self.config['STICK']),
+                tuple(self.joystick.get_axis(self.config[key]) * sign
+                      for key, sign in [('STICK', 1), ('Y', -1), ('Z', -1)]),
                 self.joystick.get_axis(self.config['TRIGGER']) > 0.2,
                 bool(self.joystick.get_button(self.config['HOME'])),
                 bool(self.joystick.get_button(self.config['STOP'])),
@@ -75,6 +77,7 @@ async def read_pendant(controller):
     active = armed = False
     previous = (False, False, False)
     hold = None
+    selection = None
 
     def dispatch(action, **data):
         try:
@@ -94,9 +97,17 @@ async def read_pendant(controller):
                 hold = None
                 previous = (False, False, False)
             else:
-                stick, trigger, home, stop = sample
+                sticks, trigger, home, stop = sample
                 selected = controller.source == 'Pendant'
-                neutral = abs(stick) < 0.2
+                current = (controller.pendant_mode, controller.pendant_axis)
+                if current != selection:
+                    armed = False
+                    selection = current
+                multi = current[0] == 'Multi'
+                axes = AXES if multi else (current[1],)
+                raw = sticks if multi else sticks[:1]
+                neutral = all(abs(value) < 0.2 for value in raw)
+                inputs = {name: scale_stick(value) for name, value in zip(axes, raw)}
                 if stop and not previous[2]:
                     dispatch('stop')
                 if not selected or not controller.devices.motion.connected or controller.state in {'Init', 'Fault'}:
@@ -108,21 +119,24 @@ async def read_pendant(controller):
                     armed = neutral and not trigger and not home and not stop
                 else:
                     if trigger != previous[0]:
-                        dispatch('enable' if trigger else 'disable')
+                        dispatch('enable' if trigger else 'disable', axes=axes)
                         if not trigger:
                             hold = None
-                    if home and not previous[1]:
-                        dispatch('home')
+                    if home and not previous[1] and not multi:
+                        dispatch('home', axes=axes)
                     if neutral or not trigger or stop:
                         if hold:
                             controller.input_lost('Pendant')
                             hold = None
                     elif hold:
-                        controller.hold('Pendant', hold, True)
-                    elif trigger and abs(stick) > 0.35:
+                        controller.hold('Pendant', hold, True, inputs=inputs if multi else None)
+                    elif trigger and max(map(abs, raw)) > 0.35:
                         candidate = uuid4().hex
-                        if dispatch('jog', hold=candidate,
-                                    direction='positive' if stick > 0 else 'negative'):
+                        action = 'pv' if multi else 'jog'
+                        data = {'inputs': inputs} if multi else {
+                            'direction': 'positive' if raw[0] > 0 else 'negative'
+                        }
+                        if dispatch(action, axes=axes, hold=candidate, **data):
                             hold = candidate
                 active = selected
                 previous = (trigger, home, stop)
@@ -134,3 +148,8 @@ async def read_pendant(controller):
             await loop.run_in_executor(worker, reader.close)
         finally:
             worker.shutdown(wait=False)
+
+
+def scale_stick(value):
+    magnitude = max(0.0, min(1.0, (abs(value) - 0.2) / 0.8))
+    return magnitude if value >= 0 else -magnitude

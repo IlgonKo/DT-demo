@@ -1,9 +1,46 @@
 const find = (id) => document.getElementById(id);
+const names = ['X1', 'Y', 'Z'];
+const rows = new Map();
 let snapshot;
 let lastFrame = 0;
 let fresh = false;
-let socket;
 let hold;
+
+for (const name of names) {
+  const row = document.createElement('tr');
+  row.innerHTML = `<th scope="row"><label><input class="selected" type="checkbox" aria-label="${name} 선택"> ${name}</label></th>
+    <td class="pos">—</td><td class="vel">—</td><td class="status">—</td>
+    <td><input class="target" aria-label="${name} 목표 위치" type="number" step="any"></td>
+    <td><div class="actions"><button type="button" data-motion="enable" disabled>On</button>
+    <button type="button" data-motion="disable" disabled>Off</button>
+    <button type="button" data-motion="home" disabled>Home</button>
+    <button type="button" data-jog="negative" disabled>Jog −</button>
+    <button type="button" data-jog="positive" disabled>Jog +</button></div></td>`;
+  find('axes').append(row);
+  rows.set(name, row);
+  row.querySelector('.selected').onchange = render;
+  row.querySelector('.target').oninput = render;
+  for (const button of row.querySelectorAll('[data-motion]')) {
+    button.onclick = () => send(button.dataset.motion, {axes: [name]});
+  }
+  for (const button of row.querySelectorAll('[data-jog]')) {
+    button.addEventListener('pointerdown', (event) => {
+      if (event.button !== 0) return;
+      button.setPointerCapture(event.pointerId);
+      startJog(name, button.dataset.jog);
+    });
+    for (const event of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+      button.addEventListener(event, release);
+    }
+    button.addEventListener('keydown', (event) => {
+      if ([' ', 'Enter'].includes(event.key)) {
+        event.preventDefault();
+        if (!event.repeat) startJog(name, button.dataset.jog);
+      }
+    });
+    button.addEventListener('keyup', release);
+  }
+}
 
 async function post(path, body) {
   const response = await fetch(path, {
@@ -28,28 +65,43 @@ async function send(action, fields = {}) {
 
 function render() {
   if (!snapshot) return;
-  const axis = snapshot.virtual.X1;
   const hmi = snapshot.source === 'HMI';
   const ready = fresh && snapshot.connected && snapshot.state === 'Ready' && !snapshot.activity;
+  const allowed = ready && hmi && snapshot.authority;
   find('connection').textContent = !fresh ? '상태 갱신 중단 · 마지막 값'
     : snapshot.connected ? 'Motion Server 연결' : 'Motion Server 연결 끊김';
   find('state').textContent = snapshot.state;
   find('source').textContent = snapshot.source;
   find('authority').textContent = snapshot.authority ? '보유' : '없음';
   find('pendant').textContent = snapshot.pendant_connected ? '연결' : '연결 안 됨';
-  find('position').textContent = axis ? axis.position.toFixed(3) + ' mm' : '—';
-  find('velocity').textContent = axis ? axis.velocity.toFixed(3) + ' mm/s' : '—';
-  find('servo').textContent = axis && axis.enabled ? 'On' : 'Off';
-  find('moving').textContent = axis ? (axis.moving ? '이동 중' : '정지') : '—';
   find('fault').textContent = snapshot.fault || '';
   if (snapshot.notice) find('notice').textContent = snapshot.notice;
-  const controllable = ready && hmi && snapshot.authority && axis;
-  for (const button of document.querySelectorAll('[data-motion]')) {
-    button.disabled = !controllable || (button.dataset.motion !== 'enable' && !axis?.enabled);
+  find('pendant-mode').value = snapshot.pendant_mode;
+  find('pendant-axis').value = snapshot.pendant_axis;
+  find('pendant-mode').disabled = !ready;
+  find('pendant-axis').disabled = !ready || snapshot.pendant_mode === 'Multi';
+  const entries = Object.entries(snapshot.pv);
+  find('pv').hidden = !entries.length;
+  find('pv').textContent = entries.map(([name, s]) =>
+    name + ' PV ' + s.requested.toFixed(1) + ' → ' + s.commanded.toFixed(1) + ' mm/s').join(' · ');
+
+  for (const [name, row] of rows) {
+    const axis = snapshot.virtual[name];
+    row.querySelector('.pos').textContent = axis ? axis.position.toFixed(3) : '—';
+    row.querySelector('.vel').textContent = axis ? axis.velocity.toFixed(3) : '—';
+    row.querySelector('.status').textContent = axis
+      ? (axis.enabled ? 'On' : 'Off') + (axis.moving ? ' · 이동' : ' · 정지') : '—';
+    for (const button of row.querySelectorAll('[data-motion]')) {
+      button.disabled = !allowed || !axis || (button.dataset.motion !== 'enable' && !axis.enabled);
+    }
+    for (const button of row.querySelectorAll('[data-jog]')) {
+      button.disabled = !hold && (!allowed || !axis?.enabled);
+    }
   }
-  for (const button of document.querySelectorAll('[data-jog]')) {
-    button.disabled = !hold && (!controllable || !axis?.enabled);
-  }
+  const selection = selectedTargets();
+  find('pp').disabled = !allowed || !selection.length ||
+    selection.some(([name, position]) => !snapshot.virtual[name]?.enabled || !Number.isFinite(position));
+  find('enable-all').disabled = !allowed || names.some((name) => !snapshot.virtual[name]);
   for (const button of document.querySelectorAll('[data-source]')) button.disabled = !ready;
   const changeAuthority = fresh && snapshot.connected && !snapshot.activity &&
     ['Ready', 'Fault'].includes(snapshot.state);
@@ -58,8 +110,13 @@ function render() {
   find('recover').disabled = !fresh || snapshot.state !== 'Fault' || Boolean(snapshot.activity);
 }
 
+function selectedTargets() {
+  return [...rows].filter(([, row]) => row.querySelector('.selected').checked)
+    .map(([name, row]) => [name, row.querySelector('.target').valueAsNumber]);
+}
+
 function connect() {
-  socket = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/api/state');
+  const socket = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/api/state');
   socket.onmessage = ({data}) => {
     snapshot = JSON.parse(data);
     lastFrame = performance.now();
@@ -74,13 +131,13 @@ function connect() {
   };
 }
 
-async function startJog(direction) {
+async function startJog(name, direction) {
   if (hold || !fresh) return;
   const id = Array.from(crypto.getRandomValues(new Uint8Array(16)),
     (byte) => byte.toString(16).padStart(2, '0')).join('');
   const current = {id, started: false, timer: null};
   hold = current;
-  if (!await send('jog', {direction, hold: current.id})) {
+  if (!await send('jog', {axes: [name], direction, hold: current.id})) {
     if (hold === current) hold = null;
     render();
     return;
@@ -105,36 +162,22 @@ function release() {
   render();
 }
 
-for (const button of document.querySelectorAll('[data-jog]')) {
-  button.addEventListener('pointerdown', (event) => {
-    if (event.button !== 0) return;
-    button.setPointerCapture(event.pointerId);
-    startJog(button.dataset.jog);
-  });
-  for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) {
-    button.addEventListener(name, release);
-  }
-  button.addEventListener('keydown', (event) => {
-    if ([' ', 'Enter'].includes(event.key)) {
-      event.preventDefault();
-      if (!event.repeat) startJog(button.dataset.jog);
-    }
-  });
-  button.addEventListener('keyup', release);
-}
 window.addEventListener('blur', release);
 document.addEventListener('visibilitychange', () => { if (document.hidden) release(); });
 for (const button of document.querySelectorAll('[data-source]')) {
   button.onclick = () => send('source', {source: button.dataset.source});
 }
-for (const action of ['enable', 'home']) findButton(action).onclick = () => send(action);
-function findButton(action) { return document.querySelector('[data-motion=' + action + ']'); }
 find('claim').onclick = () => send('authority', {enabled: true});
 find('release').onclick = () => send('authority', {enabled: false});
-for (const action of ['stop', 'disable', 'recover']) find(action).onclick = () => send(action);
+find('enable-all').onclick = () => send('enable', {axes: names});
+find('disable').onclick = () => send('disable', {axes: names});
+find('stop').onclick = () => { release(); send('stop'); };
+find('recover').onclick = () => send('recover');
+find('pendant-mode').onchange = (event) => send('pendant_setup', {pendant_mode: event.target.value});
+find('pendant-axis').onchange = (event) => send('pendant_setup', {pendant_axis: event.target.value});
 find('move').onsubmit = (event) => {
   event.preventDefault();
-  if (fresh && !findButton('pp').disabled) send('pp', {position: find('target').valueAsNumber});
+  if (fresh && !find('pp').disabled) send('pp', {positions: Object.fromEntries(selectedTargets())});
 };
 setInterval(() => {
   if (fresh && performance.now() - lastFrame >= snapshot.period_ms * snapshot.missed_frames) {

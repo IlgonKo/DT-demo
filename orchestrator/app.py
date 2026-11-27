@@ -1,4 +1,6 @@
 import asyncio
+import json
+import math
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -7,7 +9,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from orchestrator.core.system_controller import SystemController
-from orchestrator.devices.device_manager import DeviceManager
+from orchestrator.devices.device_manager import AXES, DeviceManager
 from orchestrator.interfaces.hmi.api import router
 from orchestrator.interfaces.motion_server.client import MotionServerInterface
 from orchestrator.interfaces.pendant.input import read_pendant
@@ -15,11 +17,14 @@ from orchestrator.interfaces.pendant.input import read_pendant
 
 @asynccontextmanager
 async def lifespan(app):
-    devices = DeviceManager(int(os.environ.get('DT_X1_AXIS', '0')))
-    if devices.axis_index < 0:
-        raise ValueError('DT_X1_AXIS must be nonnegative')
+    mapping = {name: int(os.environ.get(f'DT_{name}_AXIS', index))
+               for index, name in enumerate(AXES)}
+    pv_speed = float(os.environ.get('DT_PV_SPEED_MM_S', '10'))
+    if not math.isfinite(pv_speed) or pv_speed <= 0:
+        raise ValueError('DT_PV_SPEED_MM_S must be positive and finite')
+    devices = DeviceManager(mapping, json.loads(os.environ.get('DT_PV_BOUNDS_MM', '{}')))
     controller = SystemController(
-        devices, stop_timeout=float(os.environ.get('DT_STOP_SECONDS', '2'))
+        devices, stop_timeout=float(os.environ.get('DT_STOP_SECONDS', '2')), pv_speed=pv_speed
     )
     devices.motion = MotionServerInterface(
         os.environ['DT_MOTION_HOST'],
