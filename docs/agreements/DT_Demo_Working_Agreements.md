@@ -318,7 +318,7 @@ flowchart TD
 | 2026-11-27 | HMI 명령은 같은 HTTP 요청에서 접수·거절을 응답. 명령별 실행 결과는 Orchestrator 내부에서 처리하고 HMI API의 `request_id`는 제거 |
 | 2026-11-27 | HMI는 WebSocket의 첫 상태 메시지로 최신 Snapshot을 받고 같은 연결에서 상태를 갱신. 재연결도 같은 방식으로 처리 |
 | 2026-11-27 | 1차 데모 HMI WebSocket 상태 메시지는 항상 전체 Snapshot. 연결·재연결 시 최초 상태를 즉시 전송하고 이후 설정된 주기마다 최신 상태 전송. 기본값 100 ms(10 Hz), 상태 변경에 따른 추가 전송 없음 |
-| 2026-11-27 | HMI 상태 갱신이 끊기면 일반 운전 명령 전송 차단. HTTP 요청이 가능하면 Stop·Disable·Quick Stop 허용. 최신 전체 Snapshot 복구 시 조작 가능 여부 갱신 |
+| 2026-11-27 | HMI 상태 갱신이 끊기면 일반 운전 명령 전송 차단. HTTP 요청이 가능하면 공통 Stop과 전체 Servo Off(Disable) 허용. 최신 전체 Snapshot 복구 시 조작 가능 여부 갱신 |
 | 2026-11-27 | HMI 갱신 중단 기준은 마지막 유효 Snapshot 수신 후 전송 주기 × 설정 가능한 배수. 기본 배수 5, 기본 주기 100 ms에서 500 ms. WebSocket 단절 감지 시 즉시 중단 처리 |
 | 2026-11-27 | HMI·Pendant의 같은 조작은 출처를 포함한 공통 명령으로 전달. System Controller가 출처와 현재 조건으로 실행 요청의 접수 여부 판단 |
 | 2026-11-27 | Orchestrator는 실행 중 동작과 충돌하는 일반 명령을 대기열 없이 즉시 거절. Stop 우선 처리. Motion Server에도 동작 중 명령 거부 기능 추가 예정 |

@@ -32,6 +32,6 @@ TCP 요청에 포함한 `request_id`를 서버의 success/fail 응답과 연결�
 
 ## 연동 확인
 
-DT/Sync별 대상만 Stop 요청을 받도록, 현재 Motion Server에서 사용할 축 정지 API와 Loader I/O 동작을 매핑한다. HMI의 Quick Stop은 상태 갱신 중단 중에도 요청할 수 있다. 확인한 Motion Server 소스 `ea7ed1e`에서는 제어권 반납·연결 종료 경로의 Quick Stop 동작을 확인했다. HMI가 호출할 독립 Quick Stop 명령 경로와 적용 대상·시스템 상태 처리는 통합 대상 버전에서 확인한다.
+DT/Sync별 대상만 정지 요청을 받도록 축 정지 API와 Loader I/O 동작을 매핑한다. Motion Server `ea7ed1e`에서 HMI 공통 Stop의 축 정지는 `system/axes/stop`, 전체 Servo Off는 `system/axes/disable`을 사용한다.
 
 Motion Server의 동작 중 명령 거부 기능은 추가 예정으로 기록한다. 통합 대상 버전에 포함된 기존 기능을 사용한다. 기존 Python 클라이언트 재사용 범위, 구체적인 명령 스키마와 응답 시간은 구현 단계에서 확인한다. [시스템 사양 §10](../../../specifications/DT_Demo_System_Specification.md#10-motion-server-인터페이스-및-시간-관리)

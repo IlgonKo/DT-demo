@@ -16,7 +16,7 @@ HMI에서 Jog/PV 조작 입력이 끊기면 진행 중인 해당 동작을 Orche
 - 이후 설정된 주기마다 최신 전체 Snapshot을 같은 연결에서 순서대로 보낸다. 기본값은 100 ms(10 Hz)다. 상태 변경에 따른 추가 전송은 없다.
 - Snapshot에는 Init·Ready·Running·Fault, DT/Sync와 Manual/Auto, 수동 조작 소스와 Motion Server 제어권, 실제·가상 축·I/O, 현재 Fault 및 자동 운전 진행 상태를 포함한다. HMI는 메시지를 받을 때 표시 상태를 교체한다.
 - WebSocket 단절을 감지하면 즉시, 연결은 유지되더라도 마지막 유효 Snapshot 이후 전송 주기 × 중단 판단 배수가 경과하면 갱신 중단으로 처리한다. 기본 배수는 5로 기본 주기에선 500 ms다. 전송 주기와 배수는 Orchestrator 설정으로 변경 가능하다.
-- 갱신 중단 시 마지막 값과 수신 시각을 표시하고 일반 운전 명령을 차단한다. HTTP 요청이 가능하면 Stop·Disable·Quick Stop은 보낼 수 있고 System Controller가 접수 여부를 판단한다. 최신 Snapshot을 다시 받아 현재 상태를 기준으로 조작 가능 여부를 갱신한다.
+- 갱신 중단 시 마지막 값과 수신 시각을 표시하고 일반 운전 명령을 차단한다. HTTP 요청이 가능하면 공통 Stop과 전체 Servo Off(Disable)를 보낼 수 있고 System Controller가 접수 여부를 판단한다. 최신 Snapshot을 다시 받아 현재 상태를 기준으로 조작 가능 여부를 갱신한다.
 
 ## 화면과 조작
 

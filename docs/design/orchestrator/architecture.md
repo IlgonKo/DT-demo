@@ -68,7 +68,6 @@ Orchestrator와 HMI는 DT-demo에서 함께 관리한다. Motion Server와 Soft 
 
 - 준비된 시험 환경의 접속 정보, DT/Sync 장치 매핑과 운전 대상, Motion Server·Soft ESC 버전을 확인한다.
 - 실제·가상 축 Statusword B8과 Loader 끝단 유지 동작, 공통 Stop 2초 기본값을 시험에서 검증한다. Loader의 Stop 출력 동작은 밸브·공압 회로와 가상 모델 구성에 맞춰 확정한다.
-- HMI Quick Stop의 명령 경로, 대상 및 시스템 상태 처리를 확인한다. [Motion Server 연동 확인](modules/motion-server-interface.md#연동-확인)
 - Omniverse 담당자와 ROS 2 토픽·메시지·단위, USD/채널 매핑, 충돌 발행과 해소 조건을 확인한다. [Omniverse Interface](modules/omniverse-interface.md)
 
 현재 구현 범위는 DT Manual의 가상 X1·Y·Z다. 시험 단계와 각 Milestone의 판정 기준은 [개발 계획](../../planning/orchestrator-implementation-plan.md)에 있다. 시스템 기능 기준과 결정 이력은 [시스템 사양서](../../specifications/DT_Demo_System_Specification.md)와 [합의 기록](../../agreements/DT_Demo_Working_Agreements.md)을 따른다.
