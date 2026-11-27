@@ -257,7 +257,7 @@ System Controller는 실행 중인 동작과 충돌하는 일반 명령을 즉�
 | MAN-04 | HMI Positioning | 축별 목표 위치 및 PP 조건. 축별 실행 또는 선택 축 함께 실행 | 대상 축의 도달·정지 확인. 보간·동시 도착 없음 |
 | MAN-05 | Servo | HMI 축별·전체 On/Off. Pendant Trigger–Enable 직접 연결 | 실제 구동 상태 Feedback 확인 |
 | MAN-06 | Homing | HMI 축별, Pendant 단축 선택 축 요청 | Running 관리, 완료 후 Ready. 실패·timeout 시 정지 요청 및 Fault |
-| MAN-07 | Loader | 초기 끝단 / 반대 끝단 이동 요청 | 해당 대상의 끝단 센서 확인 |
+| MAN-07 | Loader | 초기 끝단 / 반대 끝단 이동 요청 | 해당 대상의 끝단 센서 확인. 가상 Loader는 정상 완료 후 선택된 밸브 출력을 다음 Loader 이동 지령 또는 공통 Stop까지 유지 |
 
 일반 수동 동작은 Manual 및 선택된 Control Source에서 요청한다. 제어권·장치 준비 및 개별 동작 조건은 Orchestrator가 확인한다. Sync에서는 Pairing된 실제·가상 장치에 같은 논리 지령을 보낸다.
 

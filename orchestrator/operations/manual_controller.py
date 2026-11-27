@@ -67,12 +67,11 @@ class ManualController:
         elif action == 'loader':
             direction = data['direction']
             loader = self.devices.loader
-            if not loader or loader.endpoint != direction or not loader.outputs_off:
-                await self.devices.command_loader(direction)
-                await wait((), lambda _: self.devices.loader and self.devices.loader.endpoint == direction)
-                await self.devices.command_loader()
-                await wait((), lambda _: self.devices.loader and self.devices.loader.endpoint == direction
-                           and self.devices.loader.outputs_off)
+            if loader and loader.at_commanded_endpoint(direction):
+                return
+            await self.devices.command_loader(direction)
+            await wait((), lambda _: (loader := self.devices.loader) is not None
+                       and loader.at_commanded_endpoint(direction))
         elif action == 'home':
             name = axes[0]
             await axis_command('home', name)

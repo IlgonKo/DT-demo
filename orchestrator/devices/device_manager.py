@@ -70,6 +70,13 @@ class LoaderState:
             return None
         return 'initial' if self.initial_sensor else 'opposite'
 
+    def at_commanded_endpoint(self, direction):
+        if self.endpoint != direction:
+            return False
+        if direction == 'initial':
+            return self.initial_output and not self.opposite_output
+        return self.opposite_output and not self.initial_output
+
     @property
     def outputs_off(self):
         return not (self.initial_output or self.opposite_output)

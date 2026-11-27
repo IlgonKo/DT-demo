@@ -13,7 +13,7 @@ DEVICE_SIMULATOR_IO_MODELS=loader0:cylinder_100mm
 DEVICE_SIMULATOR_IO_io0_BINDINGS=2:DO:0=loader0.extend,2:DO:1=loader0.retract,1:DI:0=loader0.retracted,1:DI:1=loader0.extended
 ```
 
-## 결과
+## 최초 통합 결과 (`b813bb7`)
 
 | 시험 | 관찰 결과 |
 |---|---|
@@ -27,3 +27,13 @@ DEVICE_SIMULATOR_IO_io0_BINDINGS=2:DO:0=loader0.extend,2:DO:1=loader0.retract,1:
 시험 종료 후 HMI 조작 소스, Loader 초기 끝단 및 두 출력 OFF, 세 축 0 mm 및 Servo Off, Motion Server 제어권 반납을 확인했다. 시험용 Soft ESC 구성은 후속 가상 Loader 시험에 사용할 수 있게 적용 상태로 두었다.
 
 가상 5/2 메모리 밸브는 출력 해제 후에도 밸브 방향을 유지한다. 이동 중 Stop이 들어오면 새 방향 지령을 진행하지 않고 출력을 해제하며, 끝단에 도달해 정지하기까지 확인을 계속한다. 양단 센서가 모두 OFF인 상태는 정지 미확인이다. 기본 2초 이내 정지를 확인하지 못하면 System Controller는 Fault로 전환한다.
+
+## 정상 이동 완료 후 밸브 출력 유지 검증
+
+- Chrome HMI에서 전진·후진 각각 목표 끝단 센서 ON과 Ready 복귀 후 선택 출력만 ON으로 유지되는 것을 1초씩 확인했다. Motion Server의 연속 피드백 표본은 전진 18개, 후진 17개였다. 반대 방향 요청에서 출력이 전환됐으며 양쪽 출력 동시 ON은 관찰되지 않았다.
+- 끝단에서 공통 Stop을 요청하자 양쪽 출력이 OFF로 바뀌고 초기 끝단 센서 ON, Loader 정지 확인 및 Ready 상태가 표시됐다.
+- 물리 DualSense R1에서 반대 끝단 센서와 전진 출력 ON 상태로 Ready에 복귀했다. L1은 반대 끝단에서 초기 끝단으로 이동했다. Motion Server 로그에서 L1 후진 지령과 ○의 양쪽 출력 해제 지령 사이 약 3.6초 동안 다른 출력 쓰기가 없었다. ○ 이후 초기 센서 ON, 두 출력 OFF, Loader 정지 확인 및 Ready를 확인했다.
+- 시험 종료 시 HMI 소스를 복구하고 제어권을 반납했다. X1·Y·Z는 0 mm, Servo Off 상태였다.
+- 단위 테스트 12개 통과. 출력 유지, 같은 끝단 재요청의 불필요한 밸브 쓰기 방지, 반대 출력으로 전환하는 순서, 공통 Stop의 유지 출력 해제와 정지 미확인 처리를 확인했다.
+
+HMI 시험 종료와 DualSense 시험 준비 사이 제어권이 없는 상태에서 Motion Server Heartbeat 수신 제한 시간 초과로 Fault가 한 차례 발생했다. 연결 복구 후 HMI의 Fault 해제로 Ready를 확인하고 DualSense 시험을 진행했다.

@@ -41,7 +41,7 @@ class LoaderManualTest(unittest.IsolatedAsyncioTestCase):
             while self.devices.motion.request.await_count < count:
                 await asyncio.sleep(0)
 
-    async def test_loader_uses_selected_endpoint_and_confirms_outputs_off(self):
+    async def test_loader_holds_direction_through_completion_and_changes_on_next_move(self):
         with self.assertRaises(CommandRejected):
             self.controller.dispatch('loader', 'Pendant', direction='opposite')
         self.controller.dispatch('loader', direction='opposite')
@@ -53,12 +53,30 @@ class LoaderManualTest(unittest.IsolatedAsyncioTestCase):
         ])
         self.feed(sensors=(False, False), coils=(True, False))
         self.assertEqual(self.controller.state, 'Running')
-        self.feed(sensors=(False, True), coils=(True, False))
-        await self.await_requests(2)
         self.feed(sensors=(False, True))
+        await asyncio.sleep(0)
+        self.assertEqual(self.controller.state, 'Running')
+        self.feed(sensors=(False, True), coils=(True, False))
         await asyncio.wait_for(self.controller.task, 0.1)
         self.assertEqual(self.controller.state, 'Ready')
-        self.assertEqual(self.devices.loader.endpoint, 'opposite')
+        self.assertTrue(self.devices.loader.opposite_output)
+        self.assertEqual(request.await_count, 1)
+
+        self.controller.dispatch('loader', direction='opposite')
+        await asyncio.wait_for(self.controller.task, 0.1)
+        self.assertEqual(request.await_count, 1)
+
+        self.controller.dispatch('loader', direction='initial')
+        await self.await_requests(2)
+        request.assert_awaited_with('system/io/output_write', io='io0', writes=[
+            {'slot': 2, 'kind': 'digital', 'channel': 0, 'value': False},
+            {'slot': 2, 'kind': 'digital', 'channel': 1, 'value': True},
+        ])
+        self.feed(coils=(False, True))
+        await asyncio.wait_for(self.controller.task, 0.1)
+        self.assertEqual(self.controller.state, 'Ready')
+        self.assertTrue(self.devices.loader.initial_output)
+        self.assertEqual(request.await_count, 2)
 
     async def test_common_stop_cancels_loader_and_waits_for_fresh_exclusive_endpoint(self):
         self.controller.dispatch('loader', direction='opposite')
@@ -79,6 +97,21 @@ class LoaderManualTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.controller.state, 'Ready')
         self.assertEqual(self.controller.loader_stop_confirmation, 'confirmed')
         self.assertEqual(self.devices.motion.request.await_count, 3)
+
+    async def test_stop_clears_held_output_at_an_endpoint(self):
+        self.feed(coils=(False, True))
+        self.controller.dispatch('stop')
+        await self.await_requests(2)
+        self.devices.motion.request.assert_any_await('system/io/output_write', io='io0', writes=[
+            {'slot': 2, 'kind': 'digital', 'channel': 1, 'value': False},
+            {'slot': 2, 'kind': 'digital', 'channel': 0, 'value': False},
+        ])
+        self.feed(coils=(False, True))
+        await asyncio.sleep(0)
+        self.assertEqual(self.controller.loader_stop_confirmation, 'pending')
+        self.feed()
+        await asyncio.wait_for(self.controller.task, 0.1)
+        self.assertEqual(self.controller.loader_stop_confirmation, 'confirmed')
 
     async def test_stop_times_out_if_both_sensors_are_off(self):
         self.feed(sensors=(False, False))

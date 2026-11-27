@@ -22,7 +22,7 @@ Trigger 누름·해제는 Servo On/Off에 직접 연결한다. 다축 PV는 스�
 
 ## 완료·취소
 
-PP는 모든 대상 축의 목표 도달과 정지를 확인한다. Homing은 Homing 상태, Loader 이동은 해당 끝단 센서, Servo는 Enable/Disable 피드백을 사용한다. DT는 가상 대상, Sync는 실제·가상 대상 모두에서 동작별 결과를 확인한다. PP·Homing 타임아웃의 공통 Stop과 Fault 전이는 System Controller가 처리한다. Jog·PV는 조작 입력이 유지되는 동안만 실행한다. HMI 또는 Pendant의 조작 입력이 끊기면 해당 Jog/PV 동작의 후속 지령을 중단하고 대상 장치에 정지를 요청한다. 입력이 복구되면 새 조작부터 시작한다. Jog·PV에는 목표 도달 완료 타임아웃을 두지 않는다. PP 허용 오차와 동작별 타임아웃은 구성 및 시험을 통해 정한다.
+PP는 모든 대상 축의 목표 도달과 정지를 확인한다. Homing은 Homing 상태, Loader 이동은 해당 끝단 센서, Servo는 Enable/Disable 피드백을 사용한다. 1차 가상 Loader는 목표 끝단과 선택된 밸브 출력을 확인하면 이동을 완료한다. 정상 완료 후 밸브 출력은 다음 Loader 이동 지령 또는 공통 Stop까지 유지한다. DT는 가상 대상, Sync는 실제·가상 대상 모두에서 동작별 결과를 확인한다. PP·Homing 타임아웃의 공통 Stop과 Fault 전이는 System Controller가 처리한다. Jog·PV는 조작 입력이 유지되는 동안만 실행한다. HMI 또는 Pendant의 조작 입력이 끊기면 해당 Jog/PV 동작의 후속 지령을 중단하고 대상 장치에 정지를 요청한다. 입력이 복구되면 새 조작부터 시작한다. Jog·PV에는 목표 도달 완료 타임아웃을 두지 않는다. PP 허용 오차와 동작별 타임아웃은 구성 및 시험을 통해 정한다.
 
 수동 동작 한 건당 최종 결과를 한 번 System Controller에 보고한다. 대상 실행, 완료·실패·취소 여부와 실패·취소 사유를 포함한다. 취소를 받으면 해당 실행의 후속 지령을 중단한다. 공통 Stop 요청과 정지 확인 후 시스템 상태 전이는 [System Controller](system-controller.md)가 맡는다. 티칭을 위한 축 이동은 이 모듈이, 현재 좌표 등록은 [Recipe Manager](recipe-manager.md)가 맡는다.
 

@@ -23,7 +23,7 @@
 
 Motion Server Interface에서 전달받은 실제·가상 축과 I/O 피드백을 각각 보관해 읽기 전용 Snapshot으로 제공한다. 운전 모듈은 이를 사용해 동작 완료를 판단한다. System Controller는 공통 Stop의 정지를, Recipe Manager는 티칭 좌표를, HMI Interface와 Omniverse Interface는 각 소비자에 필요한 표시 상태를 확인한다.
 
-Loader의 가상 신호 흐름은 가상 DO → Soft ESC의 밸브·실린더 모델 → 가상 DI다. 양단 센서 OFF는 중간 위치·방향을 확정할 근거로 사용하지 않는다. 가상 Loader 시험에서는 초기·반대 방향 출력을 매핑하고 방향 명령 시 비활성 출력을 먼저 해제한다. 공통 Stop은 두 출력을 해제하며 이후 수신한 유효한 피드백을 정지 판정에 사용한다. [장치 및 I/O 사양](../../../specifications/DT_Demo_System_Specification.md#3-장치-및-io-사양)
+Loader의 가상 신호 흐름은 가상 DO → Soft ESC의 밸브·실린더 모델 → 가상 DI다. 양단 센서 OFF는 중간 위치·방향을 확정할 근거로 사용하지 않는다. 가상 Loader 시험에서는 초기·반대 방향 출력을 매핑하고 방향 명령 시 비활성 출력을 먼저 해제한다. 정상 완료 후 선택된 방향 출력은 다음 Loader 이동 지령 또는 공통 Stop까지 유지한다. 공통 Stop은 두 출력을 해제하며 이후 수신한 유효한 피드백을 정지 판정에 사용한다. [장치 및 I/O 사양](../../../specifications/DT_Demo_System_Specification.md#3-장치-및-io-사양)
 
 ## Parameter/PDO Pairing과 State Alignment
 
