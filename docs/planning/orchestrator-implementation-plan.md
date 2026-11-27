@@ -1,6 +1,6 @@
 # DT Demo — Orchestrator Implementation Plan
 
-**2026-11-27 | v0.5 | 가상 DT 수동 운전 검증 완료 · Omniverse 인터페이스 협의 재개 일정**
+**2026-11-27 | v0.6 | 가상 DT 수동 운전 검증 완료 · M3 목표 추가**
 관련 문서: [DT Demo Overall 및 모듈 사양](../design/orchestrator/architecture.md), [Soft ESC Gap Analysis](https://chatgpt.com/space/page_03103215e4088191bbc5aaf06940a026).
 
 ## 1. Milestones
@@ -9,7 +9,9 @@
 
 - M2: 2026-12-25경 Full Operation Integration. Auto, 최대 10개 포인트와 사용 개수를 지원하는 Recipe, Repeat, Parameter/PDO Pairing, State Alignment, 회귀 검증. 공휴일을 고려해 12/24 사전 검증 목표.
 
-M1과 M2는 모두 12월 1차 데모(Phase 1)의 Milestone이다. 이후 Phase 2는 기존 CMMT-AS FMU의 Omniverse 실행·물리 연동 및 Adapter 확장을 검토하는 후속 단계다. 이전 대화에서 12/25 자동운전을 Phase 2로 표현한 부분과 구분하여, 이 문서에서는 M1/M2 명칭으로 일정 혼동을 방지한다. Phase 2의 달력 일정은 Phase 1 완료와 호환성 검증 후 확정한다.
+- M3: **2027년 1월 말 목표**. 기존 CMMT-AS FMU를 ovFMI로 Omniverse에 통합하고, Soft ESC를 통해 Omniverse와 실시간 제어 환경 사이에서 지령과 피드백을 양방향 중계한다. 단일 축 PP와 Time Gear를 통합 검증한다. [M3 완료 기준](#96-m3-acceptance-criteria)
+
+M1과 M2는 12월 1차 데모(Phase 1), M3는 1월 FMU 연동 단계(Phase 2)다. M3의 세부 일정은 Phase 1 진행 상황과 ovFMI·FMU 호환성 확인 결과에 맞춰 정한다.
 
 ## 2. 역할 및 가용성
 
@@ -31,12 +33,13 @@ Soft ESC 기반 패키지는 사용자 확인에 따라 완료로 기록한다. 
 | HMI 표시·상태 복구 | 구현·L2 검증 완료 | HMI 축 이름과 체크박스 배치를 정리하고 Loader의 현재 끝단과 공통 Stop 확인을 구분했다. WebSocket 갱신 중단·재연결, 마지막 값·수신 시각, 공통 Stop·전체 Servo Off, 이전 Jog 재개 방지를 검증했다. [HMI 검증](../validation/2026-11-27-hmi-state-reconnect.md) |
 | Omniverse 연동 | 보류 · 11/30(월) 협의 재개 | 인터페이스 최종 협의 후 가상 상태 발행과 Collision 수신 구현·시험 일정을 재검토한다. |
 | M1/M2 통합 검증 | 가상 DT 수동 운전 시험 준비 완료 | M1에는 실축 Sync, 운전 중 Motion Server TCP 단절 후 Fault 복구, Omniverse Follow·Collision 통합 시험이 남아 있다. M2는 계획 단계다. |
+| M3 FMU 통합 | 계획 · 2027년 1월 말 목표 | ovFMI 실행 환경 확인 후 단일 축 FMU 통합, Soft ESC 양방향 중계, Time Gear 검증 순으로 진행한다. |
 
 이전 진행 기록의 참조 커밋은 Soft ESC `e8ad0b9`, Motion Server `eff4d12`다. 시험에 실제 사용한 버전 조합과 RF별 검증 결과는 DT Demo 통합 검증 기록에 남긴다.
 
 ### 3.2 조정 일정
 
-| 기간 (2026년) | 작업 | 완료 목표 | 상태 |
+| 기간 | 작업 | 완료 목표 | 상태 |
 |---|---|---|---|
 | 11/27 | Soft ESC 기반 패키지 | 기반 패키지 개발 완료 | 완료 |
 | 11/27~30 | 기반 패키지 통합 준비 | Motion Server와 Soft ESC의 시험 버전 기록, 가상 축·I/O와 Edge #2 배포 조합 확인(RF-015/RF-013/RF-012) | Edge #2의 가상 축·Loader I/O 통합 확인 |
@@ -52,6 +55,7 @@ Soft ESC 기반 패키지는 사용자 확인에 따라 완료로 기록한다. 
 | 12/18~22 | Device Manager/HMI | Parameter/PDO Pairing, State Alignment, Auto/Setup 화면 | 예정 |
 | 12/22~24 | M2 사전 통합 | 전체 운전 및 회귀 검증 | 예정 |
 | 12/25경 | M2 시험 | Full Demo | 목표 유지 |
+| 2027년 1월 말 | M3 통합 시험 | ovFMI·Omniverse 단일 축, Soft ESC 양방향 중계, Time Gear | 목표 |
 
 11/30(월)에는 Omniverse 인터페이스 최종 협의를 이어간다. 가상 축·Loader 상태 발행과 Collision 수신의 구현·검증 일정은 계약 확정 후 정한다.
 
@@ -128,34 +132,34 @@ Omniverse 담당자와 ROS 2 Topic, 메시지 타입, Joint/IO 이름, 단위, C
 
 2026-11-27 합의에 따라 Orchestrator와 HMI는 DT-demo에 두고, Motion Server와 Soft ESC는 각각 기존 독립 Repository를 유지한다. 사양/설계/계획/검증 기록과 코드 변경을 함께 관리하며 외부 의존 버전을 기록한다. 이 계획은 기존 DT Demo 계획에 추후 반영할 검토 문서이다.
 
-## 9. Phase 2 — FMU·Omniverse 연동 및 Adapter 확장
+## 9. M3 / Phase 2 — ovFMI·Omniverse 통합, Soft ESC 중계 및 Time Gear
 
 ### 9.1 반영 근거와 결정 상태
 
-2026-11-27 「ICEops 개발 주체 설명」 대화와 본 Planning 대화에 공유된 내용을 반영한다. 사용자는 12월에는 기존 계획대로 1차 데모를 마무리하고 이후 확장을 이어가는 방향을 정했다. 기존에 함께 개발한 Festo CMMT-AS Drive FMU를 재사용하는 것이 출발점이며, 새 Drive FMU 개발을 필수 선행 작업으로 잡지 않는다.
+2026-11-27 「ICEops 개발 주체 설명」 대화와 본 Planning 대화에 공유된 내용을 반영한다. M3는 12월 1차 데모 이후 기존 Festo CMMT-AS Drive FMU를 재사용하는 단계다. 단일 축 PP부터 통합 검증하고 2027년 1월 말을 목표로 한다.
 
 | 항목 | 상태 | 계획 반영 |
 |---|---|---|
 | 12월 1차 데모 우선 완료 | 사용자 결정 | M1/M2 목표와 Acceptance Criteria 유지 |
 | 기존 CMMT-AS FMU 재사용 | 기존 개발 자산에 대한 사용자 확인 | 실행 산출물·버전·변수·대상 OS 확인 후 사용 |
-| FMU의 Omniverse 실행 및 물리 피드백 | 후속 검토 방향 | 단일 축 PoC부터 단계적으로 검증 |
-| NVIDIA ovfmi 사용 | 후보 | 현재 환경 및 FMU 호환성 확인 후 채택 판단 |
-| Time Gear | 사용자 제안 · 상세 설계 미확정 | 별도 검증 작업으로 편성 |
+| ovFMI를 통한 FMU의 Omniverse 실행 및 물리 피드백 | M3 목표 | 대상 Kit/Isaac Sim 및 기존 FMU의 호환성을 먼저 확인하고 단일 축을 통합 |
+| Soft ESC 양방향 중계 | M3 목표 | 실시간 제어 환경에서 받은 EtherCAT 지령을 Omniverse의 FMU로 전달하고 모델 피드백을 기존 제어 경로로 반환 |
+| Time Gear | M3 목표 · 상세 설계 미확정 | 실시간 통신을 유지하면서 가상 모델 시간의 감속·기준·가속을 검증 |
 | 단일 축 PoC 약 1주 | 이전 assistant 잠정 추정 | 확약 일정이나 완료 기준으로 사용하지 않음 |
 
 ICEops 등 타사 제품의 개발 주체·기능·공개 여부를 우리 구현의 검증 근거로 사용하지 않는다. 우리 데모의 차별점 검증은 실제 제어환경에서 Fieldbus/Device Profile을 거쳐 가상 장치를 구동하고, 같은 운전·Recipe의 가상 검증과 실제 적용을 연결하는 시나리오로 구체화한다. 경쟁 우위의 확정 판단은 비교 근거 확보 후 수행한다.
 
-### 9.2 Phase 1 유지 범위와 Phase 2 목표
+### 9.2 Phase 1과 M3의 목표
 
-| 구분 | Phase 1 — 12월 1차 데모 | Phase 2 — 후속 검토 |
+| 구분 | Phase 1 — 12월 1차 데모 | Phase 2 — M3 |
 |---|---|---|
-| 동작 계산 | Soft ESC 측 모델 실행, Omniverse는 가상 상태 추종 | 기존 Drive FMU를 Omniverse 연동 실행 환경에서 구동하고 물리 피드백 연결 |
-| 제어 경로 | Motion Server + Soft ESC + Orchestrator | Fieldbus/Device Profile Adapter와 모델 실행 경계 정리 |
+| 동작 계산 | Soft ESC 측 모델 실행, Omniverse는 가상 상태 추종 | Omniverse에서 ovFMI로 기존 Drive FMU를 실행하고 PhysX와 계산·피드백 책임을 정의 |
+| 제어 경로 | Motion Server + Soft ESC + Orchestrator | 실시간 제어 환경(Motion Server/EtherCAT) ↔ Soft ESC ↔ Omniverse(ovFMI/FMU) |
 | 운전 기능 | M1 Manual, M2 Auto·Recipe·Pairing·Alignment | 같은 제어 경로의 단일 축 PP와 물리 상호작용 검증부터 시작 |
-| 시간 | 기존 실시간 운전 기준 유지 | 실시간 통신과 모델 Simulation Time 사이 Time Gear 검토 |
-| 완료 판단 | 기존 M1/M2 Acceptance Criteria | 호환성, 계산 책임, 시간 계약 및 재현 가능한 PoC 결과 |
+| 시간 | 기존 실시간 운전 기준 유지 | 실시간 통신은 Wall-clock으로 유지하고 Time Gear로 모델 Simulation Time을 조절 |
+| 완료 판단 | 기존 M1/M2 Acceptance Criteria | 단일 축 지령·피드백, Stop/Fault, Time Gear의 재현 가능한 통합 시험 결과 |
 
-Phase 2의 목표 실행 위치와 프로세스 구성은 확정 전이다. FMU와 PhysX가 동일 축 운동을 중복 계산·강제하지 않도록 모델 책임을 먼저 정한다. 1차 데모 완료를 FMU·PhysX 연동 완료로 보고하지 않는다.
+M3 착수 시 ovFMI 실행 구성과 FMU·PhysX 간 모델 계산 및 피드백의 책임을 먼저 정한다.
 
 ### 9.3 선행 확인 및 개발 순서
 
@@ -164,12 +168,12 @@ Phase 1 완료 후 아래 순서로 진행한다. Omniverse 담당자와의 역�
 | 순서 | 작업 | 산출물 및 완료 기준 | 기존 잠정 공수 |
 |---|---|---|---|
 | P2-0 | 기존 FMU·실행 환경 확인 | FMU 파일/Commit, FMI 버전·방식, 변수 타입·단위·초기화·Reset, OS 바이너리, Kit/Isaac Sim 환경 및 실행 후보 호환성 표 | 미산정 |
-| P2-1 | 기존 CMMT-AS FMU 단독 실행 | 대상 환경에서 초기화·Step·종료와 기준 동작 재현, 실행 로그 | 0.5~1일 |
+| P2-1 | ovFMI에서 기존 CMMT-AS FMU 실행 | Omniverse에서 초기화·Step·종료와 기준 동작 재현, 실행 로그 | 0.5~1일 |
 | P2-2 | USD/PhysX 연결 | 변수 매핑·단위·좌표계, 입출력 교환 순서 및 물리 피드백의 계산 책임 확정, 단일 축 검증 | 1~2일 |
-| P2-3 | Soft ESC와 모델 양방향 연결 | Adapter 입력·피드백, 상태 전이, Stop/Fault 및 재초기화 동작, 기존 제어 경로로 단일 축 PP 실행 | 2~3일 |
-| P2-4 | Time Gear PoC | 시간 계약 및 배율별 재현성·오류·정지·통신 신뢰성 검증 | 별도 산정 |
+| P2-3 | Soft ESC 양방향 중계 | 기존 Motion Server/EtherCAT 지령을 FMU에 전달하고 모델 상태를 피드백으로 회수한다. 단일 축 PP, Stop/Fault 및 재초기화 동작을 확인한다. | 2~3일 |
+| P2-4 | Time Gear 구현·검증 | 시간 계약 및 배율별 재현성·오류·정지·통신 신뢰성 검증 | 별도 산정 |
 
-P2-1~3의 공수는 앞선 대화의 조건부 추정이며 P2-0, 호환성 문제 해결, Time Gear 작업은 포함하지 않는다. 따라서 Phase 2 전체를 1주로 확정하지 않는다. P2-0 결과로 실제 범위·담당·일정을 다시 산정한다. 라이브러리 후보의 버전·라이선스·지원 기능도 채택 시 원문과 실제 실행으로 검증한다.
+P2-1~3의 공수는 앞선 대화의 조건부 추정이다. P2-0 결과를 바탕으로 호환성 검증과 Time Gear 작업을 포함한 M3 전체 범위·담당·일정을 산정한다. ovFMI 버전·라이선스·지원 기능은 공식 자료와 실제 실행으로 확인한다.
 
 ### 9.4 Time Gear 검토 항목
 
@@ -192,7 +196,15 @@ Time Gear 시험안은 g=1 기준선, g=0.5 감속, g=2 가속이다. 목표값�
 
 11/27~30 계약 검토에서는 장치/운전 상태와 모델 실행 방식을 분리하고, Command/Event/State에 사용하는 Timestamp의 시계와 단위를 명시한다. Fieldbus/Device Profile Adapter, Behavior Model, FMU 실행기 및 Omniverse 연동부의 책임 경계를 기록한다. Phase 2에 필요한 변수 매핑과 모델 실행 위치 변경 가능성을 검토하되 Time Gear 구현이나 FMU 실행 위치 변경을 M1/M2 완료 조건에 추가하지 않는다.
 
-Phase 2 착수 전 P2-0 호환성 표, 단일 축 시험 시나리오, 역할 분담 및 시간 계약을 검토한다. 이후 검증된 조합만 외부 의존 버전으로 기록하고 기존 시스템 사양서의 범위 변경은 별도 합의로 관리한다.
+M3 착수 전 P2-0 호환성 표, 단일 축 시험 시나리오, 역할 분담 및 시간 계약을 검토한다. 이후 검증된 조합을 외부 의존 버전으로 기록하고 기존 시스템 사양서의 범위 변경은 별도 합의로 관리한다.
+
+### 9.6 M3 Acceptance Criteria
+
+- [ ] 대상 Omniverse 환경에서 ovFMI로 기존 CMMT-AS Drive FMU를 실행하고 초기화·Step·Reset 및 단일 축의 USD/PhysX 연동을 검증한다.
+- [ ] 기존 Motion Server/EtherCAT 경로에서 Soft ESC를 거쳐 FMU에 단일 축 PP를 지령한다. 모델 위치·속도·도달 피드백이 같은 경로로 반환되고 제어 환경에서 완료가 확인된다.
+- [ ] 같은 경로에서 Stop, Fault, 통신 단절 및 Reset 후 재초기화가 재현되고 실행 중 명령의 자동 재개가 방지된다.
+- [ ] Time Gear의 기준·감속·가속에서 가상 모델 시간과 Wall-clock을 비교한다. EtherCAT 주기, Heartbeat 및 Watchdog은 Wall-clock 기준으로 동작하고 배율별 위치·도달·정지 결과와 Overrun을 기록한다.
+- [ ] 검증에 사용한 FMU·ovFMI·Kit/Isaac Sim·Soft ESC 버전, 설정, 실행 절차와 계측 기록을 남긴다.
 
 ## 10. 변경 이력
 
@@ -203,3 +215,4 @@ Phase 2 착수 전 P2-0 호환성 표, 단일 축 시험 시나리오, 역할 �
 | v0.3 | 2026-11-27 | ICEops 대화 반영. 12월 M1/M2를 Phase 1로 정리하고 이후 기존 CMMT-AS FMU 재사용·Omniverse 물리 연동·Adapter 및 Time Gear 검토 계획 추가. 추정 공수와 미확정 설계 구분 |
 | v0.4 | 2026-11-27 | Soft ESC 기반 패키지 완료와 Orchestrator 설계 문서화 현황 반영. 통합 검증과 구현 착수 상태 정리 |
 | v0.5 | 2026-11-27 | 가상 축·Loader 수동 운전과 HMI 재연결 검증 반영. 독립 HMI Quick Stop을 범위에서 제외. 남은 M1 시험과 11/30(월) Omniverse 협의 재개 기록 |
+| v0.6 | 2026-11-27 | M3에 ovFMI 기반 Omniverse FMU 통합, Soft ESC 양방향 중계, Time Gear 구현·검증을 추가. 목표는 2027년 1월 말 |
