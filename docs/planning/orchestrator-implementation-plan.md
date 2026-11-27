@@ -25,7 +25,7 @@ Soft ESC 기반 패키지는 사용자 확인에 따라 완료로 기록한다. 
 |---|---|---|
 | Soft ESC 기반 패키지 | 완료 · 2026-11-27 | 사용자 확인. 준비된 Motion Server + Soft ESC 구성에서 가상 축·Loader I/O와 Edge #2 연동을 확인하는 작업은 DT Demo 통합 검증에 포함 |
 | Motion Server 기반 패키지 | 내부 1.0 기준선 커밋 반영 | 내부 1.0 기준선 및 기능·범위 문서 반영, TD-043~046 후속 작업 등록. DT Demo에 필요한 API와 제약은 11/27부터 확인 |
-| Architecture/API 및 ROS 2 연동 | Orchestrator 사양 문서화 · 외부 연동 확인 대기 | Overall·모듈별 책임과 명령/상태/Stop 정책 문서화. 시험용 장치·I/O 매핑과 Motion Server·Omniverse 계약 실값 확인 필요 |
+| Architecture/API 및 Omniverse 연동 | Orchestrator 사양 문서화 · 외부 연동 확인 대기 | Overall·모듈별 책임과 명령/상태/Stop 정책 문서화. 시험용 장치·I/O 매핑과 Motion Server·Omniverse 계약 실값 확인 필요 |
 | Orchestrator/HMI 구현 | 가상 X1 단축 착수 | 기존 Motion Server TCP API와 준비된 Soft ESC 환경을 기준으로 HMI·Pendant 수동 경로 구현 |
 | M1/M2 통합 검증 | 미실시 | 기반 패키지 개발 결과를 통합 완료로 처리하지 않음 |
 
@@ -37,7 +37,7 @@ Soft ESC 기반 패키지는 사용자 확인에 따라 완료로 기록한다. 
 |---|---|---|---|
 | 11/27 | Soft ESC 기반 패키지 | 기반 패키지 개발 완료 | 완료 |
 | 11/27~30 | 기반 패키지 통합 준비 | Motion Server와 Soft ESC의 시험 버전 기록, 가상 축·I/O와 Edge #2 배포 조합 확인(RF-015/RF-013/RF-012) | 확인 예정 |
-| 11/27~30 | 1. Architecture/API 및 ROS 2 계약 검토 | 공통 Command/Event/State, 장치 매핑, Motion Server API 및 ROS 2 토픽·메시지·단위·충돌 의미 확인 | 내부 사양 문서화, 외부 연동 확인 대기 |
+| 11/27~30 | 1. Architecture/API 및 Omniverse 연동 계약 검토 | 공통 Command/Event/State, 장치 매핑, Motion Server API 및 ROS 2 토픽·메시지·단위·충돌 의미 확인 | 내부 사양 문서화, 외부 연동 확인 대기 |
 | 12/1~4 | Orchestrator Core | Motion Server IF, Device Manager, System Controller | 예정 |
 | 12/3~7 | Manual/Pendant | Servo, Jog, PV, PP, Homing, Loader, Stop | 예정 |
 | 12/5~9 | HMI/Omniverse Interface | 기본 화면, 가상 상태 Publish, Collision Subscribe | 예정 |
@@ -49,7 +49,7 @@ Soft ESC 기반 패키지는 사용자 확인에 따라 완료로 기록한다. 
 | 12/22~24 | M2 사전 통합 | 전체 운전 및 회귀 검증 | 예정 |
 | 12/25경 | M2 시험 | Full Demo | 목표 유지 |
 
-Architecture/API 및 ROS 2 계약 검토는 11/27~30을 목표로 한다. 11/30 통합 준비 검토에서 시험 구성과 외부 계약을 확인하고, 구현 착수 여부는 별도로 결정한다.
+Architecture/API 및 Omniverse 연동 계약 검토는 11/27~30을 목표로 한다. 11/30 통합 준비 검토에서 시험 구성과 외부 계약을 확인하고, 구현 착수 여부는 별도로 결정한다.
 
 겹치는 날짜는 별도 개발 인력을 의미하지 않으며 사용자와 ChatGPT/Codex의 작업 전환·검증을 포함한 목표 구간이다. 11/30까지 필요한 API나 외부 시험 조건이 확인되지 않으면 영향받는 작업과 M1 검증 일정을 재산정하고 미완료 항목을 명시한다.
 
