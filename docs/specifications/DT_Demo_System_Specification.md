@@ -429,7 +429,8 @@ Sync 지령의 응답 제한 시간이 지나 실행 여부를 확인할 수 없
 | 일반 명령 | 새 명령·변경이 필요할 때 전송 |
 | Feedback | 기존 서버 설정 주기 사용. 초기 설정 약 100ms |
 | 생존 감시 | 기존 서버 Heartbeat / ACK만 사용 |
-| Heartbeat 값 | 현재 서버 설정 유지. 기존 기본값 50ms, ACK timeout 200ms이며 실제 설정값 우선 |
+| 서버 Heartbeat | 현재 서버 설정 유지. 기존 기본값은 challenge 주기 50 ms, 서버의 ACK 대기 200 ms |
+| Orchestrator 수신 대기 | challenge 수신 제한 기본 500 ms, 설정 가능. challenge 수신 즉시 ACK. 소켓 종료 감지 시 즉시 연결 종료 처리 |
 | 추가 감시 | Feedback 주기 × 5 또는 500ms의 별도 watchdog을 추가하지 않음 |
 
 ### 10.3 연결 종료·재연결

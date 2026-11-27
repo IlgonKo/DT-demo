@@ -14,8 +14,9 @@ TCP 요청에 포함한 `request_id`를 서버의 success/fail 응답과 연결�
 | 일반 명령 | 새 명령·변경이 필요할 때 전송 |
 | Feedback | 기존 서버 설정 주기 사용. 초기 설정 약 100ms |
 | 생존 감시 | 기존 서버 Heartbeat / ACK만 사용 |
-| Heartbeat 값 | 현재 서버 설정 유지. 기존 기본값 50ms, ACK timeout 200ms이며 실제 설정값 우선 |
-| 추가 감시 | Feedback 주기 × 5 또는 500ms의 별도 watchdog을 추가하지 않음 |
+| 서버 Heartbeat | 현재 서버 설정 유지. 기존 기본값은 challenge 주기 50 ms, 서버의 ACK 대기 200 ms |
+| 클라이언트 수신 대기 | Orchestrator 측 challenge 수신 제한 기본 500 ms. 수신한 challenge에는 즉시 ACK하며 소켓 종료를 감지하면 즉시 연결 종료로 처리 |
+| 장치 Feedback | Feedback 주기와 연결 생존 감시는 독립적이며, Feedback 전용 watchdog은 사용하지 않음 |
 
 ## 연결 복구와 타임아웃
 

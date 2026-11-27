@@ -71,4 +71,4 @@ Orchestrator와 HMI는 DT-demo에서 함께 관리한다. Motion Server와 Soft 
 - HMI Quick Stop의 명령 경로, 대상 및 시스템 상태 처리를 확인한다. [Motion Server 연동 확인](modules/motion-server-interface.md#연동-확인)
 - Omniverse 담당자와 ROS 2 토픽·메시지·단위, USD/채널 매핑, 충돌 발행과 해소 조건을 확인한다. [Omniverse Interface](modules/omniverse-interface.md)
 
-구현 착수는 보류 상태다. 시험 단계와 각 Milestone의 판정 기준은 [개발 계획](../../planning/orchestrator-implementation-plan.md)에 있다. 시스템 기능 기준과 결정 이력은 [시스템 사양서](../../specifications/DT_Demo_System_Specification.md)와 [합의 기록](../../agreements/DT_Demo_Working_Agreements.md)을 따른다.
+첫 구현 범위는 DT Manual의 가상 X1이다. 시험 단계와 각 Milestone의 판정 기준은 [개발 계획](../../planning/orchestrator-implementation-plan.md)에 있다. 시스템 기능 기준과 결정 이력은 [시스템 사양서](../../specifications/DT_Demo_System_Specification.md)와 [합의 기록](../../agreements/DT_Demo_Working_Agreements.md)을 따른다.

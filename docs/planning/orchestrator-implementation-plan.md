@@ -27,7 +27,7 @@ Soft ESC 기반 패키지는 사용자 확인에 따라 완료로 기록한다. 
 | Motion Server 기반 패키지 | 내부 1.0 기준선 커밋 반영 | 내부 1.0 기준선 및 기능·범위 문서 반영, TD-043~046 후속 작업 등록. DT Demo에 필요한 API와 제약은 11/27부터 확인 |
 | Architecture/API 및 Omniverse 연동 | Orchestrator 사양 문서화 · 외부 연동 확인 대기 | Overall·모듈별 책임과 명령/상태/Stop 정책 문서화. 시험용 장치·I/O 매핑과 Motion Server·Omniverse 계약 실값 확인 필요 |
 | Orchestrator/HMI 구현 | 가상 X1 단축 착수 | 기존 Motion Server TCP API와 준비된 Soft ESC 환경을 기준으로 HMI·Pendant 수동 경로 구현 |
-| M1/M2 통합 검증 | 미실시 | 기반 패키지 개발 결과를 통합 완료로 처리하지 않음 |
+| M1/M2 통합 검증 | L2 가상 X1 일부 확인 | 웹 HMI·물리 DualSense의 가상 X1 검증 및 Bluetooth 단절·재연결 확인. M1 전체 및 M2는 미실시. [가상 X1 검증 기록](../validation/2026-11-27-virtual-x1-manual.md) |
 
 이전 진행 기록의 참조 커밋은 Soft ESC `e8ad0b9`, Motion Server `eff4d12`다. 시험에 실제 사용한 버전 조합과 RF별 검증 결과는 DT Demo 통합 검증 기록에 남긴다.
 

@@ -43,14 +43,15 @@ Orchestrator는 현재 DT Demo의 운전 정책과 공정 Sequence를 구현하�
 | docs/planning/ | 개발 일정 및 Milestone |
 | docs/validation/ | 검증 절차, 실행 결과 및 검증된 외부 버전 기록 |
 | presentations/ | 발표 자료 |
-| orchestrator/core/ | 공통 데이터 모델, 상태 및 운전 정책 |
+| orchestrator/app.py | 모듈 생성·연결 및 실행 진입점 |
+| orchestrator/core/system_controller.py | System Controller의 명령 접수, 상태와 운전 정책 |
 | orchestrator/interfaces/motion_server/ | Motion Server TCP 연결 및 프로토콜 Adapter |
 | orchestrator/interfaces/pendant/ | Pendant 입력 및 피드백 Adapter |
 | orchestrator/interfaces/hmi/ | HMI API 및 상태 전달 |
 | orchestrator/interfaces/omniverse/ | Omniverse 상태 발행 및 충돌 수신. ROS 2 사용 |
 | orchestrator/devices/ | Device Manager의 장치 Registry·라우팅·상태 관리, Parameter/PDO Pairing 및 State Alignment |
-| orchestrator/operations/ | Manual 및 Auto 운전 |
-| orchestrator/operations/sequencer/ | 단일 공정 Cycle 실행 |
+| orchestrator/operations/manual_controller.py | Manual Controller의 수동 운전 |
+| orchestrator/operations/auto/ | Auto Controller의 자동 운전과 하위 Sequencer |
 | orchestrator/recipes/ | Recipe 로딩·검증·Snapshot을 처리하는 코드 |
 | hmi/ | 화면 구현 |
 | config/ | 장치 구성, 연결 정보, 운전 설정 |

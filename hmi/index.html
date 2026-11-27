@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DT Demo 수동 운전</title>
+  <link rel="stylesheet" href="/style.css">
+  <script defer src="/panel.js"></script>
+</head>
+<body>
+  <main>
+    <header><h1>DT Demo 수동 운전</h1><span class="tag">DT · 가상 X1</span></header>
+    <p id="connection" role="status">상태 연결 중</p>
+    <section>
+      <h2>운전 상태</h2>
+      <dl>
+        <div><dt>시스템</dt><dd id="state">—</dd></div>
+        <div><dt>조작 소스</dt><dd id="source">—</dd></div>
+        <div><dt>제어권</dt><dd id="authority">—</dd></div>
+        <div><dt>Pendant</dt><dd id="pendant">—</dd></div>
+      </dl>
+      <div class="actions">
+        <button data-source="HMI" disabled>HMI 선택</button>
+        <button data-source="Pendant" disabled>Pendant 선택</button>
+        <button id="claim" disabled>제어권 획득</button>
+        <button id="release" disabled>제어권 반납</button>
+      </div>
+    </section>
+    <section>
+      <h2>가상 X1</h2>
+      <dl>
+        <div><dt>위치</dt><dd id="position">—</dd></div>
+        <div><dt>속도</dt><dd id="velocity">—</dd></div>
+        <div><dt>Servo</dt><dd id="servo">—</dd></div>
+        <div><dt>이동</dt><dd id="moving">—</dd></div>
+      </dl>
+      <div class="actions">
+        <button data-motion="enable" disabled>Servo On</button>
+        <button data-motion="home" disabled>Homing</button>
+        <button data-jog="negative" disabled>Jog −</button>
+        <button data-jog="positive" disabled>Jog +</button>
+      </div>
+      <form id="move">
+        <label for="target">PP 목표 위치 (mm)</label>
+        <div class="actions"><input id="target" type="number" step="any" required>
+          <button data-motion="pp" disabled>PP 이동</button></div>
+      </form>
+      <div class="actions">
+        <button id="stop" class="stop">Stop</button>
+        <button id="disable">Servo Off</button>
+        <button id="recover" disabled>Fault 해제</button>
+      </div>
+      <p id="notice" role="status"></p>
+      <p id="fault" role="alert"></p>
+    </section>
+  </main>
+</body>
+</html>
