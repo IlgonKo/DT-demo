@@ -1,12 +1,12 @@
-# DT Demo — Repository 구성 제안
+# DT Demo — Repository 구성
 
-**2026-11-25 | v0.1 | 검토 초안 · 최종 합의 전**
+**2026-11-27 | v0.2 | 저장소 경계 확정**
 
 관련 문서: [Software Architecture](architecture.md), [Implementation Plan](../../planning/orchestrator-implementation-plan.md).
 
-## 1. 권장 방향
+## 1. 합의된 저장소 경계
 
-현재는 DT-demo와 Orchestrator를 하나의 Repository로 관리하고, Motion Server와 Soft ESC는 기존 독립 Repository를 유지하는 구성을 제안한다. 전체 Repository는 세 개다.
+DT-demo에 Orchestrator와 HMI를 함께 두고, Motion Server와 Soft ESC는 각각 기존 독립 Repository를 유지한다. 전체 Repository는 세 개다.
 
 | Repository | 역할 | 관리 범위 |
 |---|---|---|
@@ -39,7 +39,7 @@ Orchestrator는 현재 DT Demo의 운전 정책과 공정 Sequence를 구현하�
 | README.md | 프로젝트 개요, 문서·실행 진입점 |
 | docs/agreements/ | 합의 및 결정 기록 |
 | docs/specifications/ | 시스템 요구사항 |
-| docs/design/orchestrator/ | Orchestrator 설계 및 Repository 구성 제안 |
+| docs/design/orchestrator/ | Orchestrator 설계 및 Repository 구성 |
 | docs/planning/ | 개발 일정 및 Milestone |
 | docs/validation/ | 검증 절차, 실행 결과 및 검증된 외부 버전 기록 |
 | presentations/ | 발표 자료 |
@@ -47,11 +47,10 @@ Orchestrator는 현재 DT Demo의 운전 정책과 공정 Sequence를 구현하�
 | orchestrator/interfaces/motion_server/ | Motion Server TCP 연결 및 프로토콜 Adapter |
 | orchestrator/interfaces/pendant/ | Pendant 입력 및 피드백 Adapter |
 | orchestrator/interfaces/hmi/ | HMI API 및 상태 전달 |
-| orchestrator/interfaces/ros2/ | ROS2 상태 Publish 및 Collision Subscribe |
-| orchestrator/devices/ | 장치 Registry, Pairing, Routing 및 상태 관리 |
+| orchestrator/interfaces/omniverse/ | Omniverse 상태 발행 및 충돌 수신. ROS 2 사용 |
+| orchestrator/devices/ | Device Manager의 장치 Registry·라우팅·상태 관리, Parameter/PDO Pairing 및 State Alignment |
 | orchestrator/operations/ | Manual 및 Auto 운전 |
 | orchestrator/operations/sequencer/ | 단일 공정 Cycle 실행 |
-| orchestrator/setup/ | Parameter/PDO Pairing 및 State Alignment |
 | orchestrator/recipes/ | Recipe 로딩·검증·Snapshot을 처리하는 코드 |
 | hmi/ | 화면 구현 |
 | config/ | 장치 구성, 연결 정보, 운전 설정 |
@@ -75,7 +74,7 @@ Motion Server와 Soft ESC 소스는 DT-demo로 복제하지 않는다. 통합 �
 | Soft ESC 버전 | Repository URL, Release Tag가 있으면 해당 Tag, 전체 Commit ID |
 | 실행 환경 | 장치 구성, 설정 및 Recipe 식별 정보 |
 | 배포 이미지 | Container를 사용하는 경우 Image Tag와 불변 Digest |
-| 검증 결과 | 일자, DT/Sync 모드, Mock/실장비 구분, 결과 및 미완료 항목 |
+| 검증 결과 | 일자, DT/Sync 모드, 시험 환경 유형(단위·Motion Server+Soft ESC·실장치 포함), 결과 및 미완료 항목 |
 
 브랜치명이나 `latest`만으로 검증 조합을 식별하지 않는다. HMI와 Orchestrator는 같은 Repository에서도 독립 빌드·배포할 수 있으며, 구체적인 빌드 정책은 구현 단계에서 확정한다.
 

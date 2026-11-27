@@ -1,6 +1,6 @@
 # Fieldbus 기반 Digital Twin 데모 — 시스템 기능·인터페이스 사양서
 
-문서번호: DT-DEMO-SPEC-001 · 버전: 1.1 · 기준일: 2026-11-23
+문서번호: DT-DEMO-SPEC-001 · 버전: 1.2 · 기준일: 2026-11-27
 
 ## 1. 문서 목적과 적용 범위
 
@@ -169,7 +169,7 @@ DI/DO 모듈은 Remote I/O 구성의 하위 항목으로 산출하며 별도 완
 |---|---|
 | MOD-01 | Target Mode, Operation Mode 및 Manual Control Source는 HMI에서 요청하고 Orchestrator가 Ready 및 전환 조건을 확인하여 적용한다. |
 | MOD-02 | Manual Control Mode 변경도 Ready에서 허용한다. HMI는 Orchestrator가 반환한 실제 선택 상태와 거부 이유를 표시한다. |
-| MOD-03 | Manual의 일반 동작은 한 번에 하나의 Control Source만 생성한다. Auto의 지령 생성은 Sequencer가 담당한다. |
+| MOD-03 | Manual의 일반 동작은 한 번에 하나의 Control Source만 생성한다. HMI·Pendant에서 같은 기능은 출처를 포함한 같은 공통 명령으로 전달하고, System Controller가 출처와 현재 조건에 따라 접수 여부를 판단한다. Auto의 지령 생성은 Sequencer가 담당한다. |
 | MOD-04 | HMI의 Stop·초기화·Fault 해제는 Pendant 선택 중에도 사용할 수 있다. |
 | AUT-01 | Motion Server 제어권은 사용자가 HMI에서 명시적으로 획득·반납 요청한다. TCP 연결·재연결 후 자동 획득하지 않는다. |
 | AUT-02 | Orchestrator가 자신의 기존 서버 연결에서 제어권 요청을 수행한다. Manual Control Source와 Motion Server 제어권 소유자를 구분한다. |
@@ -219,11 +219,17 @@ stateDiagram-v2
 
 ### 5.3 Stop·Fault 해제·초기화
 
+System Controller는 실행 중인 동작과 충돌하는 일반 명령을 즉시 거절하며, 나중에 실행하도록 대기열에 넣지 않는다. Stop은 일반 명령보다 우선 처리한다. Manual Controller와 Auto Controller는 각자 맡은 실행의 결과를 System Controller에 보고한다. System Controller는 현재 유효한 실행에 속하는 완료 보고를 상태 전이에 반영한다. 실행 실패 시에는 보고된 실패 사유와 현재 장치 상태를 기준으로 시스템 Fault 전이 여부를 판단한다. 수동은 동작 한 건, 자동은 Auto Start부터 전체 운전 한 건당 최종 결과를 한 번 보고한다. 보고에는 대상 실행, 완료·실패·취소 여부, 실패·취소 시 사유를 포함한다.
+
 | 기능 | 처리 절차 | 완료·실패 판정 |
 |---|---|---|
-| 통상 Stop | 현재 실행·반복 예약·대기 동작 취소 → 대상 장치 정지 요청 | 정지 진행 중 Running, 실제 정지 확인 후 Ready. 정지 확인 timeout 시 Fault 및 정지 미확인 표시 |
+| 통상 Stop | System Controller가 접수하고 진행 중인 실행을 취소한다. Manual/Auto Controller는 후속 지령을 중단하고 Auto Controller는 반복 예약을 취소한다. System Controller는 Device Manager를 통해 현재 모드의 운전 대상 전체에 정지를 요청한다. DT에서는 가상 장치 전체, Sync에서는 실제·가상 장치 전체가 대상이다. DT의 State Alignment로 실제 Loader가 초기 복귀하는 중에는 실제 Loader도 정지 대상에 포함하고 정렬을 실패로 종료한다. | System Controller는 정지 확인 중 Running을 유지하고, Stop 요청을 보낸 뒤 받은 유효한 피드백으로 모든 대상 장치의 정지를 확인한 뒤 Ready로 전이한다. 정지 확인 제한 시간은 System Controller가 Stop을 접수한 시점부터 계산한다. 기본값은 2초이며 Orchestrator 설정으로 변경할 수 있다. 만료 시 Fault 및 정지 미확인 표시 |
 | Fault 해제 | 원인 해소 → 필요한 장치 Reset → 사용자 확인 → 정지·준비 확인 | 충족 시 Ready. 미충족 시 Fault 유지. 자동 재실행 없음 |
 | 초기화 | 신규 동작 차단·실행 취소 → 제한 시간 정지 요청·대기 → Init → 필수 확인 | 정지 대기 만료도 기록 후 Init 진행. Init 후 정지·준비 확인 성공 시 Ready, 실패 시 Fault |
+
+1차 데모의 축 정지는 Stop 요청 이후 받은 유효한 피드백의 Statusword bit 8(B8)=0으로 즉시 판정한다. 실제·가상 축 모두에서 이동 중 B8=1과 정지 시 B8=0을 검증하고, 실제 속도는 진단·검증에 사용한다. Ready 전환에는 정지 확인과 별도로 Fault가 해소되어 있어야 한다.
+
+1차 데모에서 Loader 정지는 Stop 이후 받은 유효한 피드백에서 끝단 센서 하나만 ON이고, 해당 끝단을 유지하는 실제 밸브·공압 회로 또는 가상 모델 동작이 사전 검증된 경우에 확인한다. 양쪽 끝단 센서가 OFF이면 정지 미확인으로 처리한다. 제한 시간 내 정지를 확인하지 못하면 System Controller가 Fault로 전이하고 정지 미확인을 표시한다.
 
 초기화 요청은 Running에서 정지 요청이 수행되지 않는 상황에도 가능해야 한다. 이전 지령 재전송, 장치 자동 Enable 및 이전 운전 자동 재개를 초기화 절차에 포함하지 않는다. 모든 축의 Homing 완료를 Ready 진입의 일괄 조건으로 요구하지 않고, 개별 동작에 필요한 Homing을 실행 조건으로 확인한다.
 
@@ -257,6 +263,8 @@ stateDiagram-v2
 
 ### 6.2 Trigger 및 속도 제한
 
+HMI 또는 Pendant의 Jog/PV 조작 입력이 끊기면 Orchestrator가 해당 동작을 정지시킨다. 재연결 후에는 새 조작 입력으로만 동작을 시작한다.
+
 - Manual의 Pendant Trigger 누름·해제는 Enable(Servo On/Off)에 직접 연결한다. 해제 시 별도의 “정지 요청 → 정지 확인 → Servo Off” 절차를 추가하지 않는다.
 - Pendant Multi Axis PV의 S/W Limit 거리 기반 속도 제한은 Orchestrator가 수행한다. 현재 위치와 한계 위치의 상대거리 및 필요한 감속을 반영하여 한계를 넘지 않도록 지령을 제한한다.
 - 처리 순서는 스틱 입력 → 속도 벡터 → 한계 거리 기반 제한 → Motion Server 지령으로 한다. 이 기능을 일반 Jog 기능으로 명명하거나 Motion Server에 추가하지 않는다.
@@ -269,7 +277,9 @@ stateDiagram-v2
 | 데이터 | 형식·의미 |
 |---|---|
 | Recipe 이름 | 저장·선택에 사용하는 이름 |
-| 경유점 | P1~P6, 순서 고정 |
+| 장치 참조 | X1·Y·Z 등 논리 장치 이름 |
+| 경유점 | P1~P10에 최대 10개 저장 |
+| 사용 포인트 수 N | 사용자가 Recipe별로 1~10 지정. Auto는 P1부터 PN까지 실행 |
 | 좌표 | 각 점의 X1·Y·Z 목표 위치 |
 | PP 속도 | 축별 기본값 및 경유점별 변경값 |
 | PP 가속도·감속도 | 축별 기본값 및 경유점별 변경값 |
@@ -282,17 +292,18 @@ stateDiagram-v2
 | RCP-01 | Recipe는 Orchestrator가 관리하며 편집·불러오기·저장은 Ready에서 허용한다. |
 | RCP-02 | 현재 위치 등록은 Manual·Ready·정지 확인 후 수행한다. 한 점에 X1·Y·Z를 함께 기록한다. |
 | RCP-03 | 티칭 기준은 DT의 가상 현재 위치, Sync의 실제 현재 위치로 한다. 요청은 HMI·Pendant 모두 허용한다. |
-| RCP-04 | P1~P6에 대기·작업·상승·복귀 등 고정 공정 역할을 부여하지 않는다. P1과 P6가 같다는 조건을 두지 않는다. |
+| RCP-04 | P1~P10에 대기·작업·상승·복귀 등 고정 공정 역할을 부여하지 않는다. 첫 점과 마지막 사용 점의 좌표에는 각각 독립적인 값을 지정할 수 있다. |
 | RCP-05 | Auto는 마지막으로 저장한 Recipe를 사용한다. 미저장 편집값을 실행 데이터에 자동 반영하지 않고 변경·저장 필요 상태를 표시한다. |
 | RCP-06 | 입력 오류와 S/W Limit 초과를 표시한다. Recipe의 직접 좌표 편집과 수동 이동 조작을 구분한다. |
+| RCP-07 | 사용 포인트 수는 Ready에서 HMI로 편집하고 Recipe에 저장한다. 수를 줄여도 뒤쪽에 등록한 포인트는 보존한다. Auto Start 전에 사용 구간의 모든 포인트가 등록되어 있고 유효한지 확인한다. |
 
 ### 7.3 경유점 실행
 
-1. P1 → P2 → … → P6 순서로 실행한다.
+1. 저장된 사용 포인트 수 N에 따라 P1부터 PN까지 순서대로 실행한다.
 2. 각 점에서 X1·Y·Z에 독립 PP 위치결정 지령을 전달한다.
 3. DT는 대상 가상 축 전부, Sync는 대상 실제·가상 축 전부의 목표 도달·정지를 확인한다.
 4. 완료 확인 후 해당 점의 Dwell을 시작하고 종료 후 다음 점으로 진행한다.
-5. P6의 이동·대기가 끝나면 상위 Sequence에 완료 결과를 반환한다. Loader 단계나 Repeat가 남아 있으면 Running을 유지한다.
+5. 마지막 사용 포인트의 이동·대기가 끝나면 상위 Sequence에 완료 결과를 반환한다. Loader 단계나 Repeat가 남아 있으면 Running을 유지한다.
 
 먼저 도착한 축은 나머지 대상 축의 완료를 기다린다. 경유점별 이동 timeout, 위치 허용오차 및 정지 기준은 구현 시 정한다. 이동·대기 중 이상·timeout은 기존 Fault 처리로 연결한다.
 
@@ -309,7 +320,7 @@ stateDiagram-v2
 | Stop | 현재 실행·다음 사이클 예약 취소, 정지 확인 후 Ready |
 | Fault·초기화 후 | 이전 단계·Repeat 자동 재개 없음. 새 Start 필요 |
 | Repeat 설정 | HMI에서 Ready일 때 설정. Running 중 변경하지 않음 |
-| Cycle 집계 | 정상 완료한 사이클만 집계. 새 Start 시 0으로 초기화 |
+| Cycle 집계 | 정상 완료한 사이클만 집계. Stop 접수 이후 도착한 기존 사이클의 완료 보고는 집계하거나 다음 사이클 시작에 사용하지 않음. 새 Start 시 0으로 초기화 |
 
 ### 8.2 Cycle Preparation
 
@@ -320,7 +331,7 @@ stateDiagram-v2
 | 3 | 도달·정지 및 Loader 센서 확인 | 모든 대상 준비 완료 |
 | 4 | 한 사이클 Sequence 호출 | Start Check 통과 |
 
-초기 좌표는 P1~P6와 별도로 정의한다. 복귀 순서·비간섭 범위·Loader 초기 끝단은 실제 기구 배치에 따라 구현 시 확정한다. 준비 이동 중에도 Running을 유지하며 실패·timeout 시 Fault로 전환한다. Cycle Preparation을 시스템 Init으로 취급하지 않는다.
+초기 좌표는 티칭 포인트와 별도로 정의한다. 복귀 순서·비간섭 범위·Loader 초기 끝단은 실제 기구 배치에 따라 구현 시 확정한다. 준비 이동 중에도 Running을 유지하며 실패·timeout 시 Fault로 전환한다. Cycle Preparation을 시스템 Init으로 취급하지 않는다.
 
 ### 8.3 한 사이클 Sequence
 
@@ -328,7 +339,7 @@ stateDiagram-v2
 |---|---|---|
 | Start Check | Cycle Preparation 완료, 장치 준비·Loader 간섭 조건 확인 | 시작 조건 충족 |
 | PCB Loading | Loader 로딩 지령 | 로딩 완료 끝단 센서 확인 |
-| Gantry Path Execution | P1~P6 순차 PP 및 Dwell | 각 구간의 모든 대상 완료 |
+| Gantry Path Execution | P1~PN 순차 PP 및 Dwell | 각 구간의 모든 대상 완료 |
 | PCB Unloading | 갠트리 비간섭 위치 확인 후 Loader 언로딩 | 언로딩 완료 끝단 센서 확인 |
 | Cycle Complete | Done 결과 반환 | 상위 Auto Control로 반환 |
 
@@ -346,6 +357,8 @@ Loader 완료는 DT의 가상 센서, Sync의 실제·가상 센서 모두로 �
 다음 사이클은 Done 결과로만 시작한다. Ready 진입만으로 재시작하지 않는다. 새 Start는 항상 조건 재확인과 Cycle Preparation부터 수행하며 중단 지점 재개는 하지 않는다.
 
 ## 9. Parameter Pairing 및 State Alignment
+
+System Controller가 실행 요청을 심사하고, Device Manager가 접수된 Parameter/PDO Pairing과 State Alignment를 실행한다.
 
 ### 9.1 공통 요청 조건
 
@@ -381,11 +394,17 @@ Loader 완료는 DT의 가상 센서, Sync의 실제·가상 센서 모두로 �
 | 4 | 실제 위치를 목표로 가상 축 일반 PP 실행, 실제 Loader 상태에 대응하는 가상 I/O 지령 | 대상 도달·정지·센서 일치 확인 |
 | 5 | 정렬 결과 표시 및 작업 완료 | 정렬 완료 조건 충족 |
 
-가상 축 Servo On은 사전 사용자 조건이 아니라 정렬 기능의 수행 단계이다. 이동 중에는 Running으로 관리한다. 실제 Loader 초기 복귀는 명시적 State Alignment의 예외 동작으로 DT에서도 허용하며 Sync 전환을 요구하지 않는다. 일반 DT 운전에서는 실제 장치 동작 차단을 유지한다.
+가상 축 Servo On은 사전 사용자 조건이 아니라 정렬 기능의 수행 단계이다. 이동 중에는 Running으로 관리한다. 실제 Loader 초기 복귀는 명시적 State Alignment의 예외 동작으로 DT에서도 허용하며 Sync 전환을 요구하지 않는다. 일반 DT 운전에서는 실제 장치 동작 차단을 유지한다. 이 초기 복귀 도중 공통 Stop을 접수하면 실제 Loader도 정지 요청·피드백 확인 대상에 포함하고 State Alignment를 실패로 종료한다.
 
 일반 지령 경로인 Orchestrator → Motion Server → EtherCAT → 가상 장치를 사용한다. 실제 Loader 초기 복귀 예외 외에는 정렬 이동을 가상 장치에만 보낸다. 모델 상태·가상 원점 덮어쓰기나 별도 Soft ESC 관리 API는 사용하지 않는다. 위치 허용오차·세부 시간 값은 구현 시 확정한다.
 
 ## 10. Motion Server 인터페이스 및 시간 관리
+
+Orchestrator 내부 명령과 Recipe는 논리 장치 이름을 사용한다. Device Manager가 실제·가상 장치 매핑을 관리하고, DT에서는 가상 장치로, Sync에서는 매핑된 실제·가상 장치 양쪽으로 운전 지령을 라우팅한다. 일반 운전 지령 전송 전에 Device Manager가 현재 모드와 해당 요청에 필요한 매핑을 모두 확인한다. 하나라도 누락되거나 유효하지 않으면 System Controller가 요청 전체를 거절하며 어느 대상에도 운전 지령을 보내지 않는다.
+
+Sync 지령이 일부 대상에만 접수된 경우 System Controller는 현재 실행을 중단하고 Sync 운전 대상 전체에 공통 Stop을 요청한 뒤 Fault로 전환한다. 기존 Stop 판정 기준을 적용하고, 제한 시간까지 정지를 확인하지 못한 대상은 정지 미확인으로 표시한다.
+
+Sync 지령의 응답 제한 시간이 지나 실행 여부를 확인할 수 없으면 원래 지령을 재전송하지 않는다. System Controller는 현재 실행을 중단하고 Sync 운전 대상 전체에 공통 Stop을 요청한 뒤 지령 접수 여부 미확인을 원인으로 Fault 전이한다. 각 대상의 정지는 유효한 피드백으로 따로 확인한다.
 
 ### 10.1 기존 API 사용 범위
 
@@ -429,7 +448,7 @@ Loader 완료는 DT의 가상 센서, Sync의 실제·가상 센서 모두로 �
 
 | 감시 대상 | Timeout 결과 |
 |---|---|
-| 명령 성공·실패 응답 | 결과 불명 처리. 동작 명령 자동 재전송 없음 |
+| 명령 성공·실패 응답 | 결과 불명 처리. 동작 명령 자동 재전송 없음. Sync 지령의 실행 여부가 불명이면 10장의 공통 Stop·Fault 절차 적용 |
 | PP 목표 도달·정지 | Stop 요청 후 Fault |
 | Homing 완료 | Stop 요청 후 Fault |
 | Loader 끝단 도달 | Sequence 중단 후 Fault |
@@ -545,7 +564,15 @@ Digital Twin 미연결·연결 단절은 데모 시작·지속을 차단하거�
 | 연결·제어권 | Motion Server 연결·제어권 상태, 명시적 획득·반납 |
 | 공통 버튼 | Stop, 초기화, Fault 해제. 화면 전환 후에도 유지 |
 
-HMI는 요청 전송만으로 상태·설정 변경을 완료 표시하지 않는다. 거부 시 기존 상태와 이유를 표시한다. 일반 수동 조작과 공통 정지·복구 요청을 구분한다.
+HMI는 명령을 HTTP로 보내고 같은 요청의 응답으로 접수·거절을 확인한다. 거절 시 현재 상태와 이유를 표시한다. 명령별 완료·실패·취소는 Orchestrator 내부에서 처리하고, HMI는 WebSocket으로 받은 현재 상태를 표시한다. HMI 명령 API에는 `request_id`를 사용하지 않는다. 일반 수동 조작과 공통 정지·복구 요청을 구분한다.
+
+HMI는 WebSocket 연결과 재연결 시 첫 상태 메시지로 최신 Snapshot 전체를 즉시 받아 화면을 초기화한다. 1차 데모에서는 이후에도 같은 연결에서 설정된 주기마다 최신 Snapshot 전체를 받아 화면 상태를 갱신한다. 전송 주기는 Orchestrator 설정으로 변경할 수 있으며 기본값은 100 ms(10 Hz)다. 상태 변경에 따른 추가 전송은 하지 않는다. HTTP 응답 전에 연결이 끊기면 접수 여부 미확인으로 표시하며 이전 명령을 자동 재전송하지 않는다.
+
+WebSocket 연결 단절 또는 상태 갱신 중단 시 HMI는 표시 중인 상태가 최신이 아님을 알리고 일반 운전 명령 전송을 막는다. HTTP 요청이 가능하면 Stop, Disable, Quick Stop은 계속 요청할 수 있으며, Orchestrator는 기존 명령 계약에 따라 접수·거절을 응답한다. 최신 전체 Snapshot을 받은 뒤 HMI는 현재 상태에 따라 일반 운전 조작을 활성화한다.
+
+상태 갱신 중단 기준은 마지막 유효한 Snapshot 수신 후 전송 주기 × 중단 판단 배수다. 배수는 Orchestrator에서 설정할 수 있으며 기본값은 5다. 기본 전송 주기 100 ms에서는 500 ms가 기준이다. WebSocket 단절 감지 시에는 즉시 중단으로 처리한다.
+
+Snapshot에는 시스템 상태와 운전 모드, 수동 조작 소스와 Motion Server 제어권, 실제·가상 축 및 I/O 상태, 현재 Fault와 자동 운전 진행 상태를 포함한다.
 
 ### 12.2 화면별 사양
 
@@ -553,8 +580,8 @@ HMI는 요청 전송만으로 상태·설정 변경을 완료 표시하지 않�
 |---|---|---|
 | Auto Control | 저장 Recipe 선택, Start·Repeat, 현재 단계·경유점·Cycle 수, 실행 불가 사유 | Auto·Ready 및 실행 조건 확인. Repeat는 Ready에서만 변경 |
 | Manual Control | 축 위치·Servo·Homing·Fault, Servo 축별·전체, Jog, PP 축별·선택 축, 축별 Homing, Loader 조작·센서·출력 | HMI Control Source에서 일반 수동 조작. Pendant 선택 시 조작 비활성, 상태 표시 유지 |
-| Recipe | 새로 만들기·불러오기·저장·다른 이름 저장, P1~P6 표, 티칭, 이동 조건, 변경·입력 오류 | 좌표·Dwell은 표, 축별 조건은 선택 행 상세. 편집은 Ready, 위치 등록은 Manual·Ready·정지 |
-| Device Setup | 실제·가상 ID Pairing, 양방향 Parameter Pairing, PDO 구성, State Alignment, 진행·결과 | 적용 전 비교, 적용 후 읽기 확인. 실행 조건은 9장 |
+| Recipe | 새로 만들기·불러오기·저장·다른 이름 저장, P1~P10 표, 사용 포인트 수 설정, 티칭, 이동 조건, 변경·입력 오류 | 좌표·Dwell은 표, 축별 조건은 선택 행 상세. 편집은 Ready, 위치 등록은 Manual·Ready·정지 |
+| Device Setup | 실제·가상 ID Pairing, 양방향 Parameter Pairing, PDO 구성, State Alignment, 작업 상태 | 적용 전 비교, 적용 후 읽기 확인. 실행 조건은 9장 |
 | Diagnostics | 연결·EtherCAT·제어권, 실제·가상 축·I/O 비교, Fault 상세·복구 안내, 이벤트 이력 | 모든 상태에서 조회 가능 |
 
 ### 12.3 상태 표시 기준
@@ -586,7 +613,7 @@ HMI는 요청 전송만으로 상태·설정 변경을 완료 표시하지 않�
 |---|---|
 | 수동 | Trigger Servo On/Off, Single/Multi 전환, 선택 축 변경, 단축 Jog, 다축 PV, 속도 단계 변경, 선택 축 Homing, Loader 이동 |
 | 공통 | Stop, Fault 해제, 초기화 |
-| 티칭 | P1~P6 선택, 현재 위치 등록 |
+| 티칭 | P1~P10 선택, 현재 위치 등록 |
 | 설정 실행 | Parameter Pairing 방향 선택·실행, State Alignment 실행 |
 | 자동 운전 | HMI에서 선택한 Auto 모드·저장 Recipe의 Auto Start |
 
@@ -618,8 +645,8 @@ LED 우선순위는 Fault → Warning → Homing → 이동 → Enable → 제�
 | CHK-02 | Digital Twin 추종 | 모든 모드에서 가상 축·가상 I/O 표시. 연결 중단 중 운전 유지, 재접속 최신 상태 표시 |
 | CHK-03 | 제어권 | 연결·재연결 자동 획득 없음. HMI 명시 요청 결과 반영 |
 | CHK-04 | 수동 조작 | Source 선택에 따른 일반 지령 허용, Trigger 직접 Enable, 단축 Jog·다축 PV 구분 |
-| CHK-05 | 경유점 실행 | 모든 대상 도달·정지 후 Dwell·다음 점. P6 완료만으로 상위 운전을 종료하지 않음 |
-| CHK-06 | Recipe 저장 | 미저장 값 미적용, DT·Sync의 티칭 기준 위치 구분 |
+| CHK-05 | 경유점 실행 | 모든 대상 도달·정지 후 Dwell·다음 점. 마지막 사용 포인트 완료 후 상위 운전 결과 확인 |
+| CHK-06 | Recipe 저장 | 미저장 값 미적용, DT·Sync 티칭 위치 구분, 사용 포인트 수 적용 및 미사용 포인트 보존 |
 | CHK-07 | Auto Repeat | Done에서만 다음 사이클, Stop/Fault/초기화 후 자동 반복 없음 |
 | CHK-08 | 초기화 | 모든 상태에서 요청 가능, 제한 시간 후 Init, 정지·준비 미확인 시 Ready 금지 |
 | CHK-09 | State Alignment | 가상 Servo On 후 일반 PP·I/O로 정렬. 원점·모델 상태 덮어쓰기 없음 |
@@ -636,7 +663,7 @@ LED 우선순위는 Fault → Warning → Homing → 이동 → Enable → 제�
 | TBD-01 | 장치 BOM | 모터·Guide Axis·Z축 상세, 밸브 및 Remote I/O·DO 점수, PC/NIC·배선·배관·장착 부품 |
 | TBD-02 | 공정 위치 | 갠트리 초기 좌표, Loader 초기 끝단, 복귀 순서, 비간섭 범위, 로딩/언로딩과 전진/후진 대응 |
 | TBD-03 | PV 제한 | 감속·지연·여유 거리·계산식·갱신 주기 및 Sync의 실제·가상 위치 반영 |
-| TBD-04 | 완료·timeout | 위치 허용오차·정지 판정 및 PP·Homing·Loader·정지·초기화·명령 응답 시간 |
+| TBD-04 | 완료·timeout | 위치 허용오차, PP 등 동작 완료 시 정지 판정, Loader 끝단 유지 회로·모델 검증 및 PP·Homing·Loader·초기화·명령 응답 시간 및 공통 Stop 기본값의 통합 시험 검증 |
 | TBD-05 | PDO 적용 | 기존 API 대응, EtherCAT 상태·프로세스 이미지 재구성 순서·제약 |
 | TBD-06 | Digital Twin | USD·I/O 매핑, Loader 중간 표시, ROS 2·Isaac Sim·OS 및 패키지 호환 |
 | TBD-07 | 충돌 전달 | 복수 대상 표현, 짧은 검출의 발행·유지·수신 처리 |
@@ -644,7 +671,7 @@ LED 우선순위는 Fault → Warning → Homing → 이동 → Enable → 제�
 
 ### 15.2 기준 자료
 
-- 기능 근거: DT_Demo_Working_Agreements.md, 2026-11-23 최신 합의본(Version 62).
+- 기능 근거: DT_Demo_Working_Agreements.md, 2026-11-27 합의 반영본.
 - 장치·원본 구성: 사용자 공유 DTDemo_SWArchitecture_rev1.3. 최신 합의가 원본 초안보다 우선한다.
 - Pendant 참고: Motion Server의 control_panel/gamepad_control_panel 내 README.md, config.example.json, device_profiles.json, config.py, controller.py.
 - ROS 2 메시지·QoS: sensor_msgs/JointState, control_msgs/DynamicInterfaceGroupValues, diagnostic_msgs/DiagnosticArray 및 ROS 2 QoS 공식 정의.

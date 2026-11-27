@@ -1,13 +1,13 @@
 # DT Demo — Orchestrator Implementation Plan
 
-**2026-11-27 | v0.3 | ICEops 논의 기반 후속 확장 계획 반영 · 목표 일정 초안**
-관련 문서: [Orchestrator Architecture](https://chatgpt.com/space/page_a5dfae25ee6c81918c25942b651db7f3), [Soft ESC Gap Analysis](https://chatgpt.com/space/page_03103215e4088191bbc5aaf06940a026).
+**2026-11-27 | v0.4 | Soft ESC 완료 및 M1 통합 준비 현황 · 목표 일정 초안**
+관련 문서: [DT Demo Overall 및 모듈 사양](../design/orchestrator/architecture.md), [Soft ESC Gap Analysis](https://chatgpt.com/space/page_03103215e4088191bbc5aaf06940a026).
 
 ## 1. Milestones
 
 - M1: 2026-12-11 Manual Control + Omniverse Integration. DT/Sync, HMI/Pendant, 가상축 및 Loader Follow, Collision/Stop/Fault.
 
-- M2: 2026-12-25경 Full Operation Integration. Auto, P1~P6 Recipe, Repeat, Parameter/PDO Pairing, State Alignment, 회귀 검증. 공휴일을 고려해 12/24 사전 검증 목표.
+- M2: 2026-12-25경 Full Operation Integration. Auto, 최대 10개 포인트와 사용 개수를 지원하는 Recipe, Repeat, Parameter/PDO Pairing, State Alignment, 회귀 검증. 공휴일을 고려해 12/24 사전 검증 목표.
 
 M1과 M2는 모두 12월 1차 데모(Phase 1)의 Milestone이다. 이후 Phase 2는 기존 CMMT-AS FMU의 Omniverse 실행·물리 연동 및 Adapter 확장을 검토하는 후속 단계다. 이전 대화에서 12/25 자동운전을 Phase 2로 표현한 부분과 구분하여, 이 문서에서는 M1/M2 명칭으로 일정 혼동을 방지한다. Phase 2의 달력 일정은 Phase 1 완료와 호환성 검증 후 확정한다.
 
@@ -17,40 +17,41 @@ Omniverse만 별도 담당자. 사용자와 ChatGPT/Codex가 Orchestrator, HMI, 
 
 ## 3. 진행 현황 및 통합 개발 일정
 
-### 3.1 진행 현황 (2026-11-26 기준)
+### 3.1 진행 현황 (2026-11-27 기준)
 
-Soft ESC와 Motion Server는 DT Demo의 기반 패키지이므로 Application 통합 개발에 앞서 우선 진행했다. Architecture/API 및 ROS2 계약 확정은 아직 완료한 항목이 아니며 11/27 착수 예정이다. 기반 패키지의 개별 개발·검증과 DT Demo 통합 검증은 별도로 관리한다.
+Soft ESC 기반 패키지는 사용자 확인에 따라 완료로 기록한다. Orchestrator의 상위 구조와 모듈별 운전 사양은 문서화했다. 장치 구성과 외부 인터페이스 계약은 통합 준비에서 확인한다. 기반 패키지 완료와 DT Demo 통합 검증은 각각 기록한다.
 
 | 항목 | 현재 상태 | 근거 및 다음 작업 |
 |---|---|---|
-| Soft ESC 기반 패키지 | 선행 개발 진행 | 사용자 진행 보고. 저장소에 DT Demo Gap Analysis, 독립 패키지 범위, 공압 FMU 검증 기록 및 Remote I/O 모델 계획, 소스·검증 도구 재정리 반영. RF-015/RF-013 및 Edge #2 검증의 잔여 범위는 계약 검토에서 확인 |
+| Soft ESC 기반 패키지 | 완료 · 2026-11-27 | 사용자 확인. 준비된 Motion Server + Soft ESC 구성에서 가상 축·Loader I/O와 Edge #2 연동을 확인하는 작업은 DT Demo 통합 검증에 포함 |
 | Motion Server 기반 패키지 | 내부 1.0 기준선 커밋 반영 | 내부 1.0 기준선 및 기능·범위 문서 반영, TD-043~046 후속 작업 등록. DT Demo에 필요한 API와 제약은 11/27부터 확인 |
-| Architecture/API 및 ROS2 계약 확정 | 착수 예정 · 11/27 | 공통 Command/Event/State, 장치 매핑, API 및 ROS2 계약 확정 |
-| Orchestrator/HMI 구현 | 통합 개발 착수 전 | 계약 확정 후 Core부터 순차 구현 |
+| Architecture/API 및 ROS 2 연동 | Orchestrator 사양 문서화 · 외부 연동 확인 대기 | Overall·모듈별 책임과 명령/상태/Stop 정책 문서화. 시험용 장치·I/O 매핑과 Motion Server·Omniverse 계약 실값 확인 필요 |
+| Orchestrator/HMI 구현 | 가상 X1 단축 착수 | 기존 Motion Server TCP API와 준비된 Soft ESC 환경을 기준으로 HMI·Pendant 수동 경로 구현 |
 | M1/M2 통합 검증 | 미실시 | 기반 패키지 개발 결과를 통합 완료로 처리하지 않음 |
 
-현황 확인에 사용한 로컬 저장소 Commit: Soft ESC `e8ad0b9`, Motion Server `eff4d12`. 이는 진행 기록의 참조이며 통합 검증을 마친 배포 조합은 아니다. 기반 패키지의 전체 완료율이나 RF별 완료 여부는 이 문서에서 추정하지 않는다.
+이전 진행 기록의 참조 커밋은 Soft ESC `e8ad0b9`, Motion Server `eff4d12`다. 시험에 실제 사용한 버전 조합과 RF별 검증 결과는 DT Demo 통합 검증 기록에 남긴다.
 
 ### 3.2 조정 일정
 
 | 기간 (2026년) | 작업 | 완료 목표 | 상태 |
 |---|---|---|---|
-| 11/25~26 선행 진행, 11/27~30 잔여 범위 확인 | Soft ESC / Motion Server 기반 패키지 | 현재 기능·검증 결과와 RF-015/RF-013/RF-012 잔여 범위 확인, 통합에 사용할 기준 버전 후보 기록 | 선행 개발 진행, 통합 준비 확인 예정 |
-| 11/27~30 | 1. Architecture/API 및 ROS2 계약 확정 | 공통 Command/Event/State, 장치 매핑, Motion Server API 및 ROS2 Topic·메시지·단위·Collision 의미 확정 | 11/27 착수 예정 |
+| 11/27 | Soft ESC 기반 패키지 | 기반 패키지 개발 완료 | 완료 |
+| 11/27~30 | 기반 패키지 통합 준비 | Motion Server와 Soft ESC의 시험 버전 기록, 가상 축·I/O와 Edge #2 배포 조합 확인(RF-015/RF-013/RF-012) | 확인 예정 |
+| 11/27~30 | 1. Architecture/API 및 ROS 2 계약 검토 | 공통 Command/Event/State, 장치 매핑, Motion Server API 및 ROS 2 토픽·메시지·단위·충돌 의미 확인 | 내부 사양 문서화, 외부 연동 확인 대기 |
 | 12/1~4 | Orchestrator Core | Motion Server IF, Device Manager, System Controller | 예정 |
 | 12/3~7 | Manual/Pendant | Servo, Jog, PV, PP, Homing, Loader, Stop | 예정 |
-| 12/5~9 | HMI/ROS2 | 기본 화면, 가상 상태 Publish, Collision Subscribe | 예정 |
+| 12/5~9 | HMI/Omniverse Interface | 기본 화면, 가상 상태 Publish, Collision Subscribe | 예정 |
 | 12/9~10 | M1 사전 통합 | DT/Sync, 실제/가상 장치, 장애 복구 | 예정 |
 | 12/11 | M1 시험 | Manual + Omniverse | 목표 유지 |
 | 12/14~17 | Recipe/Auto | Teaching, 저장, Start/Stop/Repeat | 예정 |
-| 12/16~20 | Sequencer | Cycle Preparation, Loading, P1~P6/Dwell, Unloading | 예정 |
-| 12/18~22 | Device Setup/HMI | Parameter/PDO Pairing, State Alignment, Auto/Setup 화면 | 예정 |
+| 12/16~20 | Sequencer | Cycle Preparation, Loading, P1~PN/Dwell, Unloading | 예정 |
+| 12/18~22 | Device Manager/HMI | Parameter/PDO Pairing, State Alignment, Auto/Setup 화면 | 예정 |
 | 12/22~24 | M2 사전 통합 | 전체 운전 및 회귀 검증 | 예정 |
 | 12/25경 | M2 시험 | Full Demo | 목표 유지 |
 
-Architecture/API 및 ROS2 계약 확정은 기존 11/25~27에서 11/27~30으로 조정한다. Soft ESC 개발을 일정상 신규 착수로 표시하던 항목은 기반 패키지 선행 진행 및 잔여 검증 확인으로 변경한다. 11/30 계약·통합 준비 검토에서 잔여 작업을 확인하고 12/1 Core 착수 가능 여부를 판단한다.
+Architecture/API 및 ROS 2 계약 검토는 11/27~30을 목표로 한다. 11/30 통합 준비 검토에서 시험 구성과 외부 계약을 확인하고, 구현 착수 여부는 별도로 결정한다.
 
-겹치는 날짜는 별도 개발 인력을 의미하지 않으며 사용자와 ChatGPT/Codex의 작업 전환·검증을 포함한 목표 구간이다. 기반 패키지 잔여 구현은 확인 결과에 따라 다시 배치한다. 11/30까지 필요한 API나 기반 기능이 준비되지 않으면 영향받는 작업과 M1 범위를 재산정하고 미완료 항목을 명시한다.
+겹치는 날짜는 별도 개발 인력을 의미하지 않으며 사용자와 ChatGPT/Codex의 작업 전환·검증을 포함한 목표 구간이다. 11/30까지 필요한 API나 외부 시험 조건이 확인되지 않으면 영향받는 작업과 M1 검증 일정을 재산정하고 미완료 항목을 명시한다.
 
 ### 3.3 1번 아이템의 완료 조건
 
@@ -68,21 +69,21 @@ Architecture/API 및 ROS2 계약 확정은 기존 11/25~27에서 11/27~30으로 
 
 - [ ] Servo, 단축 Jog, 다축 PV 및 거리 기반 속도 제한, HMI PP, Homing
 
-- [ ] HMI/Pendant 선택 및 입력 처리
+- [ ] HMI/Pendant 선택 및 입력 처리. HMI HTTP 접수·거절과 WebSocket 전체 상태(기본 100 ms), 재연결과 갱신 중단 시 조작 정책
 
-- [ ] DT/Sync Routing, 실제/가상 상태 독립 관리
+- [ ] DT/Sync Routing, 실제/가상 상태 독립 관리. 매핑 누락 시 전체 거절, Sync 일부 접수·접수 미확인 시 공통 Stop 및 Fault
 
 - [ ] 가상 3축 Follow, Valve/Loader IO Follow 및 Manual Loader
 
-- [ ] Collision Feedback, Stop 및 통신 장애 시 자동 재개 금지
+- [ ] Collision Feedback, Stop 및 통신 장애 시 자동 재개 금지. Stop 대상별 B8 또는 Loader 센서 확인, Loader 끝단 유지 회로·모델과 기본 2초의 통합 검증
 
-M1에는 Parameter Pairing/State Alignment 자동화가 없으므로 초기 위치 및 파라미터를 수동으로 맞춘다. RF-013 지연 시 축 Manual 시험 우선, Loader는 별도 미완료로 기록한다.
+M1에는 Parameter Pairing/State Alignment 자동화가 없으므로 초기 위치 및 파라미터를 수동으로 맞춘다. 준비된 구성에서 Loader I/O까지 확인한다. Loader 시험이 막히면 축 Manual을 먼저 검증하고 Loader 결과는 미검증으로 기록한다.
 
 ## 5. M2 Acceptance Criteria
 
-- [ ] P1~P6 Teaching, 편집, 저장/불러오기, PP 조건 및 Dwell
+- [ ] P1~P10 Teaching, 편집, 저장/불러오기, 사용 포인트 수 1~10 설정, PP 조건 및 Dwell
 
-- [ ] Cycle Preparation, PCB Loading, 경유점 이동, PCB Unloading
+- [ ] Cycle Preparation, PCB Loading, 저장된 사용 개수에 따른 경유점 이동, PCB Unloading
 
 - [ ] DT/Sync Auto, Repeat, Cycle Count, 모든 대상 도달/정지 및 센서 확인
 
@@ -90,21 +91,33 @@ M1에는 Parameter Pairing/State Alignment 자동화가 없으므로 초기 위�
 
 - [ ] PDO Mapping/Assignment 양방향 적용 및 프로세스 이미지 검증
 
-- [ ] 실제 위치 기준 가상축 PP 및 Loader State Alignment
+- [ ] 실제 위치 기준 가상축 PP 및 Loader State Alignment. 가상축 Enable 확인과 DT 정렬 중 실제 Loader 초기 복귀에 대한 Stop 및 정렬 실패
 
 - [ ] Stop/Collision/Fault 복구, 자동 재개 금지, Manual 전체 회귀
 
 ## 6. 시험 전략
 
-L1: Orchestrator 내부 Mock Interface 및 단위 테스트. L2: 기존 Motion Server Mock Backend로 실제 TCP/API 통합. L3: Motion Server + Soft ESC + 실제 장치 + Omniverse. Mock은 실제 장치 동작의 증명이 아니며 물리 시험은 별도 안전 조치 하에 수행. Omniverse 충돌 검출은 안전 인증 기능이 아니다.
+- **L1 단위 검증** — Orchestrator 내부의 상태·라우팅·오류 처리 등을 확인한다. 필요한 경우 Mock Interface를 사용한다.
+- **L2 첫 통합 시험** — 사용자가 준비한 Motion Server + Soft ESC 구성에서 실제 TCP API와 가상 장치 동작을 검증한다. 사용자 설명 기준 실제 축은 미연결 상태다. Motion Server Mock Backend는 필요 시 별도 검증에 사용한다.
+- **L3 전체 통합 시험** — Motion Server + Soft ESC + 실제 장치 + Omniverse 구성에서 실제·가상 동작과 Sync, 충돌·정지·복구를 검증한다. 물리 시험은 장비 안전 절차에 따라 진행한다.
+
+### L2 가상 환경 수동 운전 검증 범위
+
+1. **가상 X1 단축 연결** — 기존 Motion Server TCP API의 연결·Heartbeat·피드백과 HMI의 제어권 획득·반납을 확인한다. HMI에서 Servo·Homing·Jog·PP, Pendant에서 Trigger Servo·단축 Jog·선택 축 Homing을 시험한다. 두 조작 소스의 선택·전환과 비선택 소스의 일반 지령 거절을 확인한다.
+2. **정지·복구** — HMI와 Pendant의 공통 Stop, Stop 후 유효한 가상축 B8 피드백, Ready/Fault 전이와 자동 재실행 금지를 확인한다. HMI WebSocket 갱신 중단과 복구 시 조작 정책도 시험한다. HMI Jog 및 Pendant Jog/PV의 입력 단절 시 해당 동작이 정지하고, 복구 후 새 입력으로만 움직이는지 검증한다.
+3. **가상 3축·Loader 확장** — 시험 구성에서 해당 장치가 확인되면 X1·Y·Z 매핑, HMI 선택 축 PP, Pendant 다축 PV·속도 제한, HMI·Pendant Loader 양방향 이동과 끝단 피드백을 검증한다. Loader 공통 Stop의 시험에는 실제 장착된 가상 밸브·모델의 정지 출력 동작과 끝단 유지 조건 확인을 포함한다. 장치나 신호가 준비되지 않은 항목은 미검증으로 기록한다.
+
+첫 연결에서는 준비된 환경의 실제 가상축 매핑과 응답·피드백부터 확인한다. 실축 Sync와 Omniverse 연동은 M1 통합 항목으로 따로 검증한다. HMI 독립 Quick Stop은 통합 대상 Motion Server 버전의 호출 경로를 확인한 뒤 시험한다.
+
+가상 X1 단축 구현부터 착수한다. 통합 결과는 준비된 환경에서 시험한 뒤 기록한다.
 
 ## 7. 외부 의존성 및 Risk
 
-Omniverse 담당자와 11/27부터 ROS2 Topic, Joint/IO 이름, 단위, Collision 의미를 협의하고 11/30까지 확정을 목표로 한다. 담당자 확인 전에는 계약 확정으로 처리하지 않는다. Soft ESC RF-013 Virtual IO가 Loader 시험 선행 조건. RF-015 직선축 동작 검증, RF-012 Edge #2 배포 검증도 포함. 기존 Motion Server API 및 PDO 재구성 제약을 조기 확인한다. 일반 SDO Pairing과 PDO Pairing은 분리한다. HMI 디자인, 상세 Diagnostic, LED/Haptic 세부 완성도는 일정에 따라 후순위. 핵심 제어/Stop/Fault 기능은 축소하지 않는다.
+Omniverse 담당자와 11/27부터 ROS2 Topic, Joint/IO 이름, 단위, Collision 의미를 협의하고 11/30까지 확정을 목표로 한다. 담당자 확인 전에는 계약 확정으로 처리하지 않는다. 통합 시험에서 실제 사용하는 Soft ESC 구성으로 Loader Virtual I/O(RF-013), 직선축(RF-015), Edge #2 배포(RF-012)를 확인한다. 기존 Motion Server API 및 PDO 재구성 제약을 조기 확인한다. 일반 SDO Pairing과 PDO Pairing은 분리한다. HMI 디자인, 상세 Diagnostic, LED/Haptic 세부 완성도는 일정에 따라 후순위. 핵심 제어/Stop/Fault 기능은 축소하지 않는다.
 
 ## 8. Repository 및 관리
 
-DT-demo와 Orchestrator/HMI를 동일 Repository에 두는 방향을 제안한다(사용자 최종 확인 전). Motion Server와 Soft ESC는 독립 Repository 유지. 사양/설계/계획/검증 기록과 코드 변경을 함께 관리하며 외부 의존 버전을 기록한다. 이 계획은 기존 DT Demo 계획에 추후 반영할 검토 문서이다.
+2026-11-27 합의에 따라 Orchestrator와 HMI는 DT-demo에 두고, Motion Server와 Soft ESC는 각각 기존 독립 Repository를 유지한다. 사양/설계/계획/검증 기록과 코드 변경을 함께 관리하며 외부 의존 버전을 기록한다. 이 계획은 기존 DT Demo 계획에 추후 반영할 검토 문서이다.
 
 ## 9. Phase 2 — FMU·Omniverse 연동 및 Adapter 확장
 
@@ -179,3 +192,4 @@ Phase 2 착수 전 P2-0 호환성 표, 단일 축 시험 시나리오, 역할 �
 | v0.1 | 2026-11-25 | Architecture 및 통합 개발 목표 일정 초안 |
 | v0.2 | 2026-11-26 | 기반 패키지 선행 진행 현황 반영, 1번 아이템 11/27 착수 및 11/30 확정 목표, 통합 준비 검토 추가. M1/M2 목표 유지 |
 | v0.3 | 2026-11-27 | ICEops 대화 반영. 12월 M1/M2를 Phase 1로 정리하고 이후 기존 CMMT-AS FMU 재사용·Omniverse 물리 연동·Adapter 및 Time Gear 검토 계획 추가. 추정 공수와 미확정 설계 구분 |
+| v0.4 | 2026-11-27 | Soft ESC 기반 패키지 완료와 Orchestrator 설계 문서화 현황 반영. 통합 검증과 구현 착수 상태 정리 |

@@ -1,6 +1,6 @@
 # Fieldbus 기반 Digital Twin 데모 — 작업 합의 및 원고
 
-최종 갱신: 2026-11-23 (한국 시간)
+최종 갱신: 2026-11-27 (한국 시간)
 
 ## 1. 문서 목적과 작업 방식 — 확정
 
@@ -294,39 +294,55 @@ flowchart TD
 | 2026-11-19 | 별도 문서에 합의를 기록하며 지속 갱신 |
 | 2026-11-19 | Purpose를 Virtual Commissioning이 아닌 Digital Twin의 Fieldbus 확장으로 표현한 문장 확정 |
 | 2026-11-19 | Value를 Seamless Validation → Seamless Deployment → Seamless Synchronization으로 확정. Control의 로직 재사용은 Deployment에 통합 |
-
 | 2026-11-19 | 정정: 세 Value 영문 설명은 미확정. Validation과 Deployment의 대상 일치 및 Synchronization과의 용어 일관성을 검토 중 |
-
 | 2026-11-19 | 사용자 승인으로 5.4의 수정 문구 확정. Validation과 Deployment의 검증 대상을 control logic, recipes, selected device parameters로 일치시키고 Synchronization은 같은 Fieldbus 인터페이스의 상태·진단 반영으로 정의 |
-
 | 2026-11-19 | 실제 액체 토출 없이 갠트리 이동 경로만 시연하는 범위 확정 |
-
 | 2026-11-19 | Demo Application & Concept의 Target Application, Demonstration Scope, Process Flow, Demo Concept 문구 및 중앙 공정·하단 가치 흐름의 시각 구성 방향 확정 |
-
 | 2026-11-19 | 시연 첫 단계는 DT 선행 개발과 세 Value 실현 과정을 동영상으로 소개. Built virtually. Proven physically. 및 physical machine을 사용한 설명 문구 합의. 이후 라이브 단계는 제안 상태 유지 |
-
 | 2026-11-20 | 전체 원고 및 일관성 검토 후 PPT를 한 번에 제작하는 방식으로 변경 |
 | 2026-11-20 | 이번 데모는 Soft ESC 측 동작 모델 + Omniverse 위치 추종 유지 |
-
 | 2026-11-20 | 후속 제품 기능 요구사항은 PPT 작업 문서가 아닌 Soft ESC RF에서 관리하도록 분리 |
-
 | 2026-11-20 | 상위 제어 영역 명칭을 Demo Control System으로 확정. Motion Server를 별도 블록으로 표시 |
-
 | 2026-11-20 | Demo Control System 내부 상위 제어 블록 명칭을 Orchestrator로 확정 |
-
 | 2026-11-20 | Sync는 실제·가상 장치 동일 지령 병렬 구동. Omniverse는 모든 모드에서 가상 장치 상태만 추종하도록 확정. 이전 실제 상태 직접 추종 설명을 대체 |
-
 | 2026-11-20 | Orchestrator는 pairing·모드·레시피·지령 분배·상태 취합을 담당하고 Motion Server는 장치 ID 기반 제어·PDO/SDO·피드백을 담당하도록 확정 |
-
 | 2026-11-20 | Festo AX는 2차 구현 범위로 확정. 현재 Architecture에서 세부 기능·연결 정의를 진행하지 않음 |
-
 | 2026-11-20 | 1차 System Architecture 관계도 및 Fieldbus Integration 핵심 문구·5개 설명 항목 확정 |
-
 | 2026-11-20 | Operating Modes & Data Flow의 2×2 표와 지령 생성 방식/대상 구분 메시지 확정 |
-
 | 2026-11-20 | Hardware & Network Topology 확정. Edge #1 / Edge #2 / Workstation의 기능 구분, Tablet Wi-Fi, DualSense Bluetooth 연결 및 Ethernet 표기 통일 |
-
 | 2026-11-20 | Seamless Synchronization 영문은 기존 합의 문구 유지. Architecture의 실제·가상 동일 지령 및 DT의 가상 상태 추종 구조도 유지 |
+| 2026-11-27 | Recipe별 P1~P10 저장 및 사용 포인트 수 설정. Orchestrator 명령의 접수·거절과 실행 결과(완료·실패·취소)를 구분 |
+| 2026-11-27 | Orchestrator가 명령별 `request_id`를 발급하고 접수 응답과 최종 결과에서 같은 ID를 사용하기로 논의. 아래 HMI 명령 계약으로 대체 |
+| 2026-11-27 | HMI 재연결 시 WebSocket 구독을 복구하고 HTTP로 최신 상태 Snapshot을 새로 조회. 이전 명령 결과 조회와 자동 재전송은 수행하지 않음. 아래 WebSocket 상태 계약으로 대체 |
+| 2026-11-27 | HMI 상태 Snapshot 기본 범위 확정. 시스템 상태·운전 모드, 수동 조작 소스·Motion Server 제어권, 실제·가상 축 및 I/O 상태, 현재 Fault·자동 운전 진행 상태 |
+| 2026-11-27 | HMI 명령은 같은 HTTP 요청에서 접수·거절을 응답. 명령별 실행 결과는 Orchestrator 내부에서 처리하고 HMI API의 `request_id`는 제거 |
+| 2026-11-27 | HMI는 WebSocket의 첫 상태 메시지로 최신 Snapshot을 받고 같은 연결에서 상태를 갱신. 재연결도 같은 방식으로 처리 |
+| 2026-11-27 | 1차 데모 HMI WebSocket 상태 메시지는 항상 전체 Snapshot. 연결·재연결 시 최초 상태를 즉시 전송하고 이후 설정된 주기마다 최신 상태 전송. 기본값 100 ms(10 Hz), 상태 변경에 따른 추가 전송 없음 |
+| 2026-11-27 | HMI 상태 갱신이 끊기면 일반 운전 명령 전송 차단. HTTP 요청이 가능하면 Stop·Disable·Quick Stop 허용. 최신 전체 Snapshot 복구 시 조작 가능 여부 갱신 |
+| 2026-11-27 | HMI 갱신 중단 기준은 마지막 유효 Snapshot 수신 후 전송 주기 × 설정 가능한 배수. 기본 배수 5, 기본 주기 100 ms에서 500 ms. WebSocket 단절 감지 시 즉시 중단 처리 |
+| 2026-11-27 | HMI·Pendant의 같은 조작은 출처를 포함한 공통 명령으로 전달. System Controller가 출처와 현재 조건으로 실행 요청의 접수 여부 판단 |
+| 2026-11-27 | Orchestrator는 실행 중 동작과 충돌하는 일반 명령을 대기열 없이 즉시 거절. Stop 우선 처리. Motion Server에도 동작 중 명령 거부 기능 추가 예정 |
+| 2026-11-27 | Stop 접수 후 도착한 기존 사이클의 완료 보고는 완료 횟수 집계와 다음 사이클 시작에 사용하지 않음 |
+| 2026-11-27 | Manual/Auto Controller의 완료 보고는 현재 유효한 실행에 속할 때 System Controller가 반영. 실행과 완료 보고의 연결 방식과 내부 ID 사용 여부는 구현 단계에서 결정 |
+| 2026-11-27 | 수동 동작 한 건과 Auto Start부터 전체 자동 운전 한 건을 각각 한 실행으로 보고 최종 결과를 한 번만 보고. 대상 실행, 완료·실패·취소 여부 및 실패·취소 사유 포함 |
+| 2026-11-27 | System Controller가 Stop 접수, 실행 취소, Device Manager를 통한 정지 요청과 피드백 기반 Ready/Fault 판단을 담당. Manual/Auto Controller는 후속 지령을 중단하고 Auto Controller는 반복을 취소 |
+| 2026-11-27 | 공통 Stop은 현재 모드의 운전 대상 전체에 적용. DT는 가상 장치 전체, Sync는 실제·가상 장치 전체 |
+| 2026-11-27 | Stop 요청 이후 받은 유효한 피드백으로 모든 대상의 정지를 확인하면 Ready, 제한 시간 내 확인하지 못하면 Fault로 전환 |
+| 2026-11-27 | 1차 데모 축 정지 판정은 Stop 이후 유효한 축 Statusword와 실제 속도를 함께 사용. 두 조건을 충족한 피드백에서 판정하며 별도 유지 시간 조건 없음. 아래 B8 판정으로 갱신 |
+| 2026-11-27 | 실제·가상 축 B8 동작 검증. Stop 이후 유효한 피드백의 B8=0으로 축 정지 판정. 실제 속도는 진단·검증에 사용하고 Fault는 별도로 확인 |
+| 2026-11-27 | 1차 데모 Loader는 Stop 이후 유효한 피드백에서 끝단 센서 하나만 ON이고 끝단 유지 동작이 사전 검증된 경우 정지 확인. 양쪽 OFF는 정지 미확인, 제한 시간 만료 시 Fault |
+| 2026-11-27 | 공통 Stop의 정지 확인 제한 시간은 System Controller가 Stop을 접수한 시점부터 계산 |
+| 2026-11-27 | 공통 Stop 정지 확인 제한 시간은 기본 2초이며 Orchestrator 설정으로 변경 가능. 실제·가상 통합 시험에서 Loader까지 검증 |
+| 2026-11-27 | 실행 실패 시 System Controller가 보고된 실패 사유와 현재 장치 상태를 기준으로 시스템 Fault 전이 여부를 판단 |
+| 2026-11-27 | Orchestrator 내부 명령과 Recipe는 논리 장치 이름을 사용. Device Manager가 실제·가상 장치 매핑과 DT/Sync 운전 지령 라우팅을 담당 |
+| 2026-11-27 | 일반 운전 지령 전송 전 현재 모드에 필요한 장치 매핑을 모두 확인. 하나라도 누락 또는 무효이면 System Controller가 요청 전체를 거절하고 어느 대상에도 운전 지령을 전송하지 않음 |
+| 2026-11-27 | Sync 지령이 일부 대상에만 접수되면 현재 실행 중단, Sync 운전 대상 전체 공통 Stop 요청 후 Fault 전이. 제한 시간 내 확인하지 못한 대상은 정지 미확인 표시 |
+| 2026-11-27 | Sync 지령의 응답 제한 시간 만료로 실행 여부가 불명이면 재전송 없이 현재 실행 중단 및 Sync 대상 전체에 공통 Stop 요청. 지령 접수 여부 미확인으로 Fault를 기록하고 실제 정지는 대상별 피드백으로 확인 |
+| 2026-11-27 | State Alignment는 System Controller가 승인하고 Device Manager가 실행·완료 확인을 담당. DT에서 실제 Loader 초기 복귀 중 공통 Stop을 접수하면 실제 Loader도 정지하고 State Alignment는 실패로 종료 |
+| 2026-11-27 | Omniverse 연동 모듈 이름은 Omniverse Interface. ROS 2는 해당 모듈의 연동 프로토콜 |
+| 2026-11-27 | 첫 통합 시험은 사용자가 준비한 Motion Server + Soft ESC 환경에서 진행. 사용자 설명 기준 실제 축 미연결. 구현·시험 착수 보류 |
+
+| 2026-11-27 | HMI·Pendant Jog/PV 조작 입력이 끊기면 해당 동작을 정지하고 재연결 후 새 입력으로만 다시 움직임 |
 
 ## 8. 현재 작업 상태
 
@@ -554,7 +570,7 @@ Orchestrator의 상위 자동 운전 관리가 한 사이클 Sequence의 실행 
 |---|---|
 | 사용자 Start | Running 진입 및 첫 사이클 실행 |
 | 정상 완료 + Repeat OFF | 전체 실행 종료 후 Ready 복귀 |
-| 정상 완료 + Repeat ON | Running 유지, 내부적으로 다음 사이클 시작 |
+| 정상 완료 + Repeat ON | Running 유지, 내부적으로 다음 사이클 시작. Stop 접수 후 도착한 기존 완료 보고는 집계와 다음 사이클 시작에 사용하지 않음 |
 | Stop | 반복 예약 취소 및 기존 정지 절차 수행. 정지 완료 후 Ready |
 | Fault | 반복 예약 취소 및 Fault 처리. 복구 후 자동 재개하지 않음 |
 | 사용자 재초기화 | 반복 예약·현재 실행·대기 명령 취소 후 공통 재초기화 절차 수행 |
@@ -594,9 +610,9 @@ Orchestrator의 상위 자동 운전 관리가 한 사이클 Sequence의 실행 
 | 준비 확인 | Recipe, 통신·장치, Servo On 및 필요한 Homing 상태 확인 |
 | 초기 위치 복귀 | Loader·갠트리가 시작 위치와 다르면 정해진 순서로 이동 |
 | 복귀 완료 확인 | 대상 축의 도달·정지 및 Loader 센서 상태 확인 |
-| Sequence 시작 | Loading → P1~P6 → Unloading 공정 실행. Sequence 내부 Start Check에서 준비 완료 확인 |
+| Sequence 시작 | Loading → P1~PN → Unloading 공정 실행. Sequence 내부 Start Check에서 준비 완료 확인 |
 
-- 초기 위치는 자유 티칭 경유점 P1~P6와 별도로 정의한다. 갠트리 초기 좌표와 Loader 초기 상태를 설정한다.
+- 초기 위치는 자유 티칭 경유점 P1~P10와 별도로 정의한다. 갠트리 초기 좌표와 Loader 초기 상태를 설정한다.
 - 갠트리와 Loader 간섭을 피하는 복귀 순서를 별도 정의한다. 구체적인 순서·좌표·판정값은 후속 확정한다.
 - 복귀 중에도 Running을 유지하고 실패·timeout 시 Fault로 전환한다.
 - 반복 운전에서도 매 사이클 준비 상태를 확인하며 이미 초기 조건을 만족하면 복귀 이동을 생략한다.
@@ -614,12 +630,13 @@ Orchestrator의 상위 자동 운전 관리가 한 사이클 Sequence의 실행 
 
 Teaching 기준 위치·저장 조건, 경유점 구성 및 Recipe 데이터는 14.2의 확정 내용을 따른다. PP 구간 완료 판정과 다음 구간 진행 조건은 14.3을 따른다. 속도·가감속은 축별 PP 파라미터 기준으로 정의한다.
 
-### 14.2 Teaching & Recipe — 확정 (2026-11-23)
+### 14.2 Teaching & Recipe — 확정 (2026-11-27 갱신)
 
 | 항목 | 정의 |
 |---|---|
 | 티칭 단위 | X1·Y·Z 위치를 하나의 경유점으로 저장 |
-| 경유점 수 | 우선 P1~P6 |
+| 경유점 저장 범위 | P1~P10, Recipe별 최대 10개 |
+| 사용 포인트 수 N | HMI에서 Recipe별로 1~10 지정하여 저장. P1부터 PN까지 순차 실행 |
 | 저장 시점 | Manual · Ready에서 정지 확인 후 저장 |
 | DT 모드의 저장 위치 | 가상 장치의 현재 위치 |
 | Sync 모드의 저장 위치 | 실제 장치의 현재 위치 |
@@ -631,7 +648,7 @@ Teaching 기준 위치·저장 조건, 경유점 구성 및 Recipe 데이터는 
 
 | 경유점 데이터 | 내용 |
 |---|---|
-| Point ID | P1~P6 |
+| Point ID | P1~P10 |
 | Target Position | X1·Y·Z 목표 위치 |
 | Profile Velocity | 축별 PP 속도 |
 | Profile Acceleration / Deceleration | 축별 PP 가속도·감속도 |
@@ -639,11 +656,11 @@ Teaching 기준 위치·저장 조건, 경유점 구성 및 Recipe 데이터는 
 
 축별 속도·가감속에는 기본값을 두고 필요한 경유점에서 수정할 수 있다. 실행 순서·완료 판정은 14.3, 경유점 역할의 자유 정의는 14.4, 중단 후 재실행은 13.2, 편집·저장과 실행 데이터 구분은 18.5를 따른다.
 
-### 14.3 경유점 실행 규칙 — 확정 (2026-11-23)
+### 14.3 경유점 실행 규칙 — 확정 (2026-11-27 갱신)
 
 | 항목 | 정의 |
 |---|---|
-| 실행 순서 | P1 → P2 → … → P6 |
+| 실행 순서 | 저장된 사용 포인트 수 N에 따라 P1부터 PN까지 순차 실행 |
 | 축 명령 방식 | 각 경유점에서 X1·Y·Z에 독립적인 PP 위치결정 명령 전달 |
 | DT 구간 완료 | 대상 가상축 모두 목표 위치 도달 및 정지 확인 |
 | Sync 구간 완료 | 페어링된 실제·가상축 모두 목표 위치 도달 및 정지 확인 |
@@ -657,14 +674,14 @@ Teaching 기준 위치·저장 조건, 경유점 구성 및 Recipe 데이터는 
 
 경유점 기능은 완료 결과를 반환한다. Loader 단계가 남아 있거나 Repeat ON으로 다음 사이클이 예정되어 있으면 Running을 유지한다. 전체 운전 종료·정지 완료 시에만 Auto Control이 Ready 복귀를 처리한다(13장·15장).
 
-### 14.4 경유점 자유 정의 — 확정 (2026-11-23)
+### 14.4 경유점 자유 정의 — 확정 (2026-11-27 갱신)
 
-- P1~P6에 로딩 대기·작업 시작·상승·복귀 등 고정된 공정 역할을 부여하지 않는다.
+- P1~P10에 로딩 대기·작업 시작·상승·복귀 등 고정된 공정 역할을 부여하지 않는다.
 - 사용자가 각 점의 좌표와 축별 PP 이동 조건·Dwell Time을 자유롭게 정의한다.
-- 기존 실행 순서 P1 → P2 → … → P6와 완료·정지·대기 판정은 유지한다.
-- P1/P6를 대기 위치로 간주하거나 P2→P3·P4→P5를 Z축 전용 이동으로 가정하지 않는다. P1과 P6 좌표가 같아야 한다는 조건도 두지 않는다.
+- P1부터 PN까지 순차 실행하고 각 점에서 도달·정지 후 대기한다.
+- 첫 점과 마지막 사용 점의 좌표는 각각 지정하며, 구간별 축 이동은 사용자가 정의한 좌표를 따른다.
 - Loader의 로딩·언로딩 전 간섭 여부 확인 조건은 유지하되 특정 Point ID의 고정 역할로 대체하지 않는다. 판정 방법과 조건은 후속 상세화한다.
-- 경유점 수를 가변으로 확장하는 요구는 이번 합의에 포함하지 않으며 현재는 기존의 P1~P6를 사용한다.
+- 사용 포인트 수를 줄여도 뒤쪽에 등록한 점은 보존하며, Auto Start 전에 사용 포인트가 모두 등록되어 있고 유효한지 확인한다.
 
 ## 15. Detail Specification — Sequence (한 사이클 공정)
 
@@ -674,7 +691,7 @@ Teaching 기준 위치·저장 조건, 경유점 구성 및 Recipe 데이터는 
 |---|---|---|
 | Start Check | Auto Control의 Cycle Preparation 완료 및 장치 준비·Loader 간섭 여부 확인 | 시작 조건 충족 |
 | PCB Loading | Loader에 로딩 지령 전달 | 로딩 완료 위치 센서 확인 |
-| Gantry Path Execution | P1~P6 순차 실행 | 각 점의 이동·정지·대기 완료 |
+| Gantry Path Execution | P1~PN 순차 실행 | 각 점의 이동·정지·대기 완료 |
 | PCB Unloading | 갠트리의 Loader 비간섭 위치 확인 후 언로딩 지령 | 언로딩 완료 위치 센서 확인 |
 | Cycle Complete | 한 사이클의 정상 완료 결과를 반환 | 상위 자동 운전 관리에 결과 전달 |
 
@@ -682,7 +699,7 @@ Loader 완료는 DT에서 가상 센서, Sync에서 실제·가상 센서 상태
 
 ### 15.2 시퀀스 책임 범위 — 확정 (2026-11-23)
 
-Sequence는 한 사이클의 Start Check → Loading → P1~P6 → Unloading을 수행하고 완료·중단·Fault 결과를 반환한다. Repeat 옵션과 다음 사이클 재시작은 시퀀스 내부 공정이 아니라 13장 Auto Control에서 다룬다. Sequence는 시스템 상태를 매 사이클 Ready로 전환하는 주체가 아니다.
+Sequence는 한 사이클의 Start Check → Loading → P1~PN → Unloading을 수행하고 완료·중단·Fault 결과를 반환한다. Repeat 옵션과 다음 사이클 재시작은 시퀀스 내부 공정이 아니라 13장 Auto Control에서 다룬다. Sequence는 시스템 상태를 매 사이클 Ready로 전환하는 주체가 아니다.
 
 
 ## 16. Detail Specification — Parameter Pairing & State Alignment
@@ -795,7 +812,7 @@ State Alignment는 가상 모델의 현재 상태를 덮어쓰거나 별도 초�
 - Motion Server 코드는 수정하지 않는다. 현재 구현된 API·Heartbeat/ACK·제어권·연결 종료 동작을 사용한다.
 - TCP 연결 및 재연결 후 제어권을 자동 획득하지 않는다.
 - 사용자가 HMI에서 명시적으로 제어권 획득을 요청하면 Orchestrator가 자신의 Motion Server 연결에서 기존 system/authority/request를 호출한다.
-- HMI는 Motion Server가 반환한 실제 획득 결과를 표시한다. 요청만으로 획득 완료로 간주하지 않는다.
+- HMI는 Motion Server 피드백을 반영한 현재 제어권 상태를 표시한다. 명령의 접수 응답은 별도로 표시한다.
 - 재연결 후에도 제어권은 새 HMI 요청으로만 획득한다. 이전 제어권·이동 명령·Sequence를 자동 복원하지 않는다.
 - Motion Server의 command authority와 Manual Control Source(HMI/Pendant)는 구분한다. Manual Control Source가 Pendant여도 Motion Server 연결의 제어 주체는 Orchestrator이다.
 
@@ -1075,7 +1092,7 @@ ros2 topic pub --once /dt/virtual/joint_states sensor_msgs/msg/JointState "{name
 |---|---|
 | Auto Control | Recipe 선택, Auto Start / Repeat, 진행 상태·완료 Cycle 수. Stop은 공통 영역 사용 |
 | Manual Control | HMI Jog·PP 이동, Servo On/Off, Homing, 축·Loader 수동 조작 |
-| Recipe | P1~P6 티칭·편집, PP 속도·가감속 및 Dwell 설정, 저장·불러오기 |
+| Recipe | P1~P10 티칭·편집, 사용 포인트 수 설정, PP 속도·가감속 및 Dwell 설정, 저장·불러오기 |
 | Device Setup | 장치 Pairing, 파라미터·PDO 구성, State Alignment |
 | Diagnostics | 실제·가상 장치 상태 비교, I/O, 통신·Fault 상세. Fault 해제 버튼은 공통 영역에 배치 |
 
@@ -1155,7 +1172,8 @@ HMI 수동 조작은 Single / Multi Axis 모드를 구분하지 않고 Jog / PP 
 | 영역 | 표시·조작 항목 |
 |---|---|
 | Recipe 관리 | 이름, 새로 만들기, 불러오기, 저장, 다른 이름으로 저장 |
-| 경유점 표 | P1~P6의 X1·Y·Z 위치와 Dwell |
+| 경유점 표 | P1~P10의 X1·Y·Z 위치와 Dwell |
+| 사용 포인트 수 | 1~10 지정 및 Recipe 저장 |
 | 이동 조건 | 선택 경유점의 축별 PP 속도·가속도·감속도, 기본값 사용 여부 |
 | 티칭 | 경유점 선택 후 현재 위치 등록 |
 | 편집 상태 | 변경 여부, 입력 오류·S/W Limit 초과 표시 |
@@ -1166,7 +1184,7 @@ HMI 수동 조작은 Single / Multi Axis 모드를 구분하지 않고 Jog / PP 
 - 티칭 위치는 DT에서는 가상 위치, Sync에서는 실제 위치를 사용한다.
 - Recipe 화면은 데이터 관리에 집중하며 수동 이동은 Manual Control에서 수행한다.
 - Auto 실행에는 마지막으로 저장한 Recipe를 사용한다. 미저장 변경이 있으면 저장 필요를 표시하며 편집 중인 값을 실행 데이터에 암묵적으로 적용하지 않는다.
-- 기존 P1~P6의 자유로운 역할 정의, 축별 PP 이동 및 Dwell, 기본 이동 조건과 경유점별 override 원칙을 유지한다.
+- 기존 P1~P10의 자유로운 역할 정의, 축별 PP 이동 및 Dwell, 기본 이동 조건과 경유점별 override 원칙을 유지한다.
 
 
 ### 18.6 Device Setup 화면 — 확정 (2026-11-23)
@@ -1177,7 +1195,7 @@ HMI 수동 조작은 Single / Multi Axis 모드를 구분하지 않고 Jog / PP 
 | Parameter Pairing | 실제 → 가상 / 가상 → 실제 방향 선택, 대상 파라미터 비교·적용 |
 | PDO Configuration | 실제·가상 장치의 RxPDO·TxPDO 매핑 및 Assignment 조회·설정 |
 | State Alignment | 실제·가상 위치·Loader 상태 비교, 정렬 실행 |
-| 실행 결과 | 작업 진행 상태, 성공·실패 및 원인 표시 |
+| 작업 상태 | 진행 상태, 적용 후 읽기 확인 정보, 현재 Fault 및 원인을 표시 |
 
 - Parameter Pairing 대상은 기존 합의대로 PP 속도·가속도·감속도, S/W Limit 및 PDO 구성으로 한다.
 - PDO Configuration은 화면의 별도 영역으로 구분하되 Parameter Pairing 작업에 포함할 수 있도록 한다.
@@ -1242,9 +1260,9 @@ HMI 수동 조작은 Single / Multi Axis 모드를 구분하지 않고 Jog / PP 
 | 수동 | 속도 단계 변경 | 설정된 속도 배율 증가·감소 |
 | 수동 | 선택 축 Homing | 단축 모드에서 선택 축 Homing |
 | 수동 | Loader 조작 | 초기 끝단 / 반대 끝단 이동 요청 |
-| 공통 | Stop | 기존 모드별 대상에 정지 요청 및 실행·반복 예약 취소 |
+| 공통 | Stop | 현재 모드의 운전 대상 전체에 정지 요청(DT는 가상, Sync는 실제·가상) 및 실행·반복 예약 취소 |
 | 공통 | Fault 해제 | 기존 원인 해소·사용자 확인·정지·준비 조건에 따라 복구 요청 |
-| 티칭 | 경유점 선택 | 현재 Recipe의 P1~P6 중 티칭 대상 선택 |
+| 티칭 | 경유점 선택 | 현재 Recipe의 P1~P10 중 티칭 대상 선택 |
 | 티칭 | 현재 위치 등록 | 선택 경유점에 현재 위치 등록. DT는 가상, Sync는 실제 위치 사용 |
 | 설정 | Parameter Pairing 방향 선택 | 실제 → 가상 / 가상 → 실제 |
 | 설정 | Parameter Pairing 실행 | 선택 방향 및 설정된 대상 파라미터로 기존 Pairing 요청 |
