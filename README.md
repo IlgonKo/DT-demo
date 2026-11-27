@@ -44,7 +44,7 @@ $env:DT_Z_AXIS = '2'
 
 Jog/PV 유지 입력이 500 ms 동안 도착하지 않으면 해당 동작에 Stop을 요청한다. Motion Server Heartbeat challenge 수신 대기 기본값은 500 ms다. 이 값은 서버의 ACK 제한과 별개이며 `DT_MOTION_HEARTBEAT_TIMEOUT`(초)으로 설정한다. 이 초기 구현의 상태 발행 기본값은 100 ms, 갱신 중단 판단 배수는 5다. `DT_HMI_PERIOD_MS`, `DT_HMI_MISSED_FRAMES`, `DT_STOP_SECONDS`를 환경 변수로 조정할 수 있다. PV 기본 최대 요청 속도는 축당 10 mm/s이며 `DT_PV_SPEED_MM_S`로 설정한다. `DT_PV_BOUNDS_MM`으로 서버 위치 한계 안의 더 좁은 작업 범위를 적용할 수 있다. 공통 Stop은 가상 세 축과 구성된 가상 Loader에 적용한다. [가상 3축 검증 기록](docs/validation/2026-11-27-virtual-xyz-manual.md) · [가상 X1 검증 기록](docs/validation/2026-11-27-virtual-x1-manual.md)
 
-Loader 시험 구성은 `DT_LOADER_CONFIG=config/virtual-loader-soft-esc.json`으로 활성화한다. Soft ESC에서 Loader 모델과 같은 I/O 채널 연결을 확인한다. HMI의 가상 Loader에서 초기·반대 끝단을 조작하고 센서·밸브 출력·정지 확인 상태를 볼 수 있다. DualSense는 스틱 중립, L2 해제 상태에서 L1으로 초기 끝단, R1으로 반대 끝단을 지령하고 ○(Circle)로 공통 Stop을 요청한다. 물리 SDL 입력은 `orchestrator/interfaces/pendant/device_profiles.json`, 동작 할당은 같은 폴더의 `config.json`을 사용한다. 필요하면 `DT_PENDANT_CONFIG`로 별도 동작 설정을 지정한다.
+Loader 시험 구성은 `DT_LOADER_CONFIG=config/virtual-loader-soft-esc.json`으로 활성화한다. Soft ESC에서 Loader 모델과 같은 I/O 채널 연결을 확인한다. HMI의 가상 Loader에서 Unload(초기 끝단)와 Load를 조작하고 센서·밸브 출력·정지 확인 상태를 볼 수 있다. DualSense는 스틱 중립, L2 해제 상태에서 L1으로 Unload, R1으로 Load를 지령하고 ○(Circle)로 공통 Stop을 요청한다. 물리 SDL 입력은 `orchestrator/interfaces/pendant/device_profiles.json`, 동작 할당은 같은 폴더의 `config.json`을 사용한다. 필요하면 `DT_PENDANT_CONFIG`로 별도 동작 설정을 지정한다.
 
 정상 이동 완료 후 선택된 밸브 출력은 다음 Loader 이동 지령 또는 공통 Stop까지 유지한다. 방향을 바꾸면 기존 출력을 먼저 해제한다. 5/2 메모리 밸브 모델은 Stop으로 출력을 해제해도 기존 방향을 유지한다. Orchestrator는 새 피드백에서 검증된 끝단 하나만 ON이며 두 출력이 모두 OFF일 때 Loader 정지를 확인한다. [가상 Loader 검증 기록](docs/validation/2026-11-27-virtual-loader-manual.md)
 

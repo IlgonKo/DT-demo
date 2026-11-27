@@ -29,7 +29,7 @@
         <label for="pendant-mode">Pendant 모드</label>
         <select id="pendant-mode" disabled><option value="Single">단축 Jog</option><option value="Multi">다축 PV</option></select>
         <label for="pendant-axis">단축 대상</label>
-        <select id="pendant-axis" disabled><option>X1</option><option>Y</option><option>Z</option></select>
+        <select id="pendant-axis" disabled><option value="X1">X</option><option>Y</option><option>Z</option></select>
       </div>
     </section>
     <section>
@@ -50,15 +50,16 @@
     <section id="loader-panel" hidden>
       <h2>가상 Loader</h2>
       <dl>
-        <div><dt>초기 끝단 센서</dt><dd id="loader-initial-sensor">—</dd></div>
-        <div><dt>반대 끝단 센서</dt><dd id="loader-opposite-sensor">—</dd></div>
-        <div><dt>초기 방향 밸브</dt><dd id="loader-initial-output">—</dd></div>
-        <div><dt>반대 방향 밸브</dt><dd id="loader-opposite-output">—</dd></div>
-        <div><dt>Loader 정지</dt><dd id="loader-stop">—</dd></div>
+        <div><dt>Unload 센서</dt><dd id="loader-initial-sensor">—</dd></div>
+        <div><dt>Load 센서</dt><dd id="loader-opposite-sensor">—</dd></div>
+        <div><dt>Unload 밸브</dt><dd id="loader-initial-output">—</dd></div>
+        <div><dt>Load 밸브</dt><dd id="loader-opposite-output">—</dd></div>
+        <div><dt>현재 끝단</dt><dd id="loader-endpoint">—</dd></div>
+        <div><dt>공통 Stop 확인</dt><dd id="loader-stop">—</dd></div>
       </dl>
       <div class="actions">
-        <button data-loader="initial" disabled>초기 끝단 이동</button>
-        <button data-loader="opposite" disabled>반대 끝단 이동</button>
+        <button data-loader="initial" disabled>Unload</button>
+        <button data-loader="opposite" disabled>Load</button>
       </div>
     </section>
     <section>

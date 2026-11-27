@@ -14,7 +14,7 @@ System Controller가 승인한 수동 동작을 실행하고, 논리 장치 대�
 | MAN-04 | HMI Positioning | 축별 목표 위치 및 PP 조건. 축별 실행 또는 선택 축 함께 실행 | 대상 축의 도달·정지 확인. 보간·동시 도착 없음 |
 | MAN-05 | Servo | HMI 축별·전체 On/Off. Pendant Trigger–Enable 직접 연결 | 실제 구동 상태 Feedback 확인 |
 | MAN-06 | Homing | HMI 축별, Pendant 단축 선택 축 요청 | Homing 완료 또는 실패·타임아웃을 확인해 System Controller에 보고 |
-| MAN-07 | Loader | 초기 끝단 / 반대 끝단 이동 요청 | 해당 대상의 끝단 센서 확인 |
+| MAN-07 | Loader | Unload(초기 끝단) / Load 이동 요청 | 해당 대상의 끝단 센서 확인 |
 
 ## Pendant 속도 제어
 

@@ -1,5 +1,6 @@
 const find = (id) => document.getElementById(id);
 const names = ['X1', 'Y', 'Z'];
+const axisLabel = (name) => name === 'X1' ? 'X' : name;
 const rows = new Map();
 let snapshot;
 let lastFrame = 0;
@@ -7,10 +8,11 @@ let fresh = false;
 let hold;
 
 for (const name of names) {
+  const label = axisLabel(name);
   const row = document.createElement('tr');
-  row.innerHTML = `<th scope="row"><label><input class="selected" type="checkbox" aria-label="${name} 선택"> ${name}</label></th>
+  row.innerHTML = `<th scope="row"><label><input class="selected" type="checkbox" aria-label="${label} 선택"> ${label}</label></th>
     <td class="pos">—</td><td class="vel">—</td><td class="status">—</td>
-    <td><input class="target" aria-label="${name} 목표 위치" type="number" step="any"></td>
+    <td><input class="target" aria-label="${label} 목표 위치" type="number" step="any"></td>
     <td><div class="actions"><button type="button" data-motion="enable" disabled>On</button>
     <button type="button" data-motion="disable" disabled>Off</button>
     <button type="button" data-motion="home" disabled>Home</button>
@@ -83,7 +85,7 @@ function render() {
   const entries = Object.entries(snapshot.pv);
   find('pv').hidden = !entries.length;
   find('pv').textContent = entries.map(([name, s]) =>
-    name + ' PV ' + s.requested.toFixed(1) + ' → ' + s.commanded.toFixed(1) + ' mm/s').join(' · ');
+    axisLabel(name) + ' PV ' + s.requested.toFixed(1) + ' → ' + s.commanded.toFixed(1) + ' mm/s').join(' · ');
 
   for (const [name, row] of rows) {
     const axis = snapshot.virtual[name];
@@ -105,8 +107,16 @@ function render() {
     for (const signal of ['initial_sensor', 'opposite_sensor', 'initial_output', 'opposite_output']) {
       find('loader-' + signal.replace('_', '-')).textContent = feedback ? (feedback[signal] ? 'ON' : 'OFF') : '—';
     }
+    const endpointLabels = {initial: 'Unload', opposite: 'Load'};
+    if (!feedback) {
+      find('loader-endpoint').textContent = '—';
+    } else if (feedback.initial_sensor && feedback.opposite_sensor) {
+      find('loader-endpoint').textContent = '양단 센서 동시 ON';
+    } else {
+      find('loader-endpoint').textContent = endpointLabels[feedback.endpoint] || '끝단 미감지';
+    }
     const stopLabels = {pending: '확인 중', confirmed: '확인됨', unconfirmed: '미확인'};
-    find('loader-stop').textContent = fresh ? (stopLabels[loader.stop_confirmation] || '—') : '—';
+    find('loader-stop').textContent = fresh ? (stopLabels[loader.stop_confirmation] || '요청 없음') : '—';
     for (const button of document.querySelectorAll('[data-loader]')) {
       button.disabled = !allowed || !feedback || feedback.conflicting || !loader.endpoint_hold_verified;
     }

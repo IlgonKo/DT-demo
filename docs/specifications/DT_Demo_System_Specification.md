@@ -124,7 +124,7 @@ flowchart TD
 |---|---|---|---|
 | Loader 실린더 | DGC-32-300-… | 1 | 상세 형번 TBD |
 | Loader 밸브 | 실제 밸브 구성 TBD | 1식 | single valve / VTUX 표기 정리 후 선정 |
-| 양단 위치 센서 | 24 VDC DI | 2 | 초기 끝단 / 반대 끝단 |
+| 양단 위치 센서 | 24 VDC DI | 2 | Unload(초기 끝단) / Load |
 | EtherCAT Remote I/O | CPX-E-EC 또는 CPX-AP-I-EC-M12 후보 | 1식 | 최종 모델·모듈 TBD |
 | DI | 최소 2점 | 모듈 수 TBD | 양단 센서 입력 |
 | DO | 밸브 구성에 따른 점수 | TBD | 밸브 출력 |
@@ -257,7 +257,7 @@ System Controller는 실행 중인 동작과 충돌하는 일반 명령을 즉�
 | MAN-04 | HMI Positioning | 축별 목표 위치 및 PP 조건. 축별 실행 또는 선택 축 함께 실행 | 대상 축의 도달·정지 확인. 보간·동시 도착 없음 |
 | MAN-05 | Servo | HMI 축별·전체 On/Off. Pendant Trigger–Enable 직접 연결 | 실제 구동 상태 Feedback 확인 |
 | MAN-06 | Homing | HMI 축별, Pendant 단축 선택 축 요청 | Running 관리, 완료 후 Ready. 실패·timeout 시 정지 요청 및 Fault |
-| MAN-07 | Loader | 초기 끝단 / 반대 끝단 이동 요청 | 해당 대상의 끝단 센서 확인. 가상 Loader는 정상 완료 후 선택된 밸브 출력을 다음 Loader 이동 지령 또는 공통 Stop까지 유지 |
+| MAN-07 | Loader | Unload(초기 끝단) / Load 이동 요청 | 해당 대상의 끝단 센서 확인. 가상 Loader는 정상 완료 후 선택된 밸브 출력을 다음 Loader 이동 지령 또는 공통 Stop까지 유지 |
 
 일반 수동 동작은 Manual 및 선택된 Control Source에서 요청한다. 제어권·장치 준비 및 개별 동작 조건은 Orchestrator가 확인한다. Sync에서는 Pairing된 실제·가상 장치에 같은 논리 지령을 보낸다.
 
@@ -331,7 +331,7 @@ HMI 또는 Pendant의 Jog/PV 조작 입력이 끊기면 Orchestrator가 해당 �
 | 3 | 도달·정지 및 Loader 센서 확인 | 모든 대상 준비 완료 |
 | 4 | 한 사이클 Sequence 호출 | Start Check 통과 |
 
-초기 좌표는 티칭 포인트와 별도로 정의한다. 복귀 순서·비간섭 범위·Loader 초기 끝단은 실제 기구 배치에 따라 구현 시 확정한다. 준비 이동 중에도 Running을 유지하며 실패·timeout 시 Fault로 전환한다. Cycle Preparation을 시스템 Init으로 취급하지 않는다.
+초기 좌표는 티칭 포인트와 별도로 정의한다. Loader의 초기 끝단은 Unload다. 복귀 순서·비간섭 범위와 실제 Loader 신호 매핑은 기구 배치에 따라 구현 시 확정한다. 준비 이동 중에도 Running을 유지하며 실패·timeout 시 Fault로 전환한다. Cycle Preparation을 시스템 Init으로 취급하지 않는다.
 
 ### 8.3 한 사이클 Sequence
 
@@ -662,7 +662,7 @@ LED 우선순위는 Fault → Warning → Homing → 이동 → Enable → 제�
 | ID | 항목 | 확정할 내용 |
 |---|---|---|
 | TBD-01 | 장치 BOM | 모터·Guide Axis·Z축 상세, 밸브 및 Remote I/O·DO 점수, PC/NIC·배선·배관·장착 부품 |
-| TBD-02 | 공정 위치 | 갠트리 초기 좌표, Loader 초기 끝단, 복귀 순서, 비간섭 범위, 로딩/언로딩과 전진/후진 대응 |
+| TBD-02 | 공정 위치 | 갠트리 초기 좌표, 복귀 순서, 비간섭 범위, 실제 Loader의 Load/Unload 방향 및 I/O 채널 매핑 |
 | TBD-03 | PV 제한 | 감속·지연·여유 거리·계산식·갱신 주기 및 Sync의 실제·가상 위치 반영 |
 | TBD-04 | 완료·timeout | 위치 허용오차, PP 등 동작 완료 시 정지 판정, Loader 끝단 유지 회로·모델 검증 및 PP·Homing·Loader·초기화·명령 응답 시간 및 공통 Stop 기본값의 통합 시험 검증 |
 | TBD-05 | PDO 적용 | 기존 API 대응, EtherCAT 상태·프로세스 이미지 재구성 순서·제약 |

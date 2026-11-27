@@ -30,6 +30,8 @@ HMI에서 Jog/PV 조작 입력이 끊기면 진행 중인 해당 동작을 Orche
 | Device Setup | 실제·가상 ID Pairing, 양방향 Parameter Pairing, PDO 구성, State Alignment, 작업 상태 | 적용 전 비교, 적용 후 읽기 확인. 실행은 [Device Manager](device-manager.md#parameterpdo-pairing과-state-alignment)가 맡는다. |
 | Diagnostics | 연결·EtherCAT·제어권, 실제·가상 축·I/O 비교, Fault 상세·복구 안내, 이벤트 이력 | 모든 상태에서 조회 가능 |
 
-DT Manual의 가상 Loader는 초기·반대 끝단 이동 버튼과 두 센서, 두 밸브 출력, Loader 정지 확인 상태를 표시한다. Loader 이동 버튼은 HMI가 조작 소스이고 제어권과 유효한 Loader 피드백을 확보한 Ready 상태에서 활성화된다. 가상 모델의 끝단 유지 동작은 시험 구성에서 검증한다.
+DT Manual의 가상 Loader는 Unload(초기 끝단)와 Load 버튼, 각 센서와 밸브 출력, 현재 감지한 끝단을 표시한다. 공통 Stop의 Loader 정지 확인은 별도 항목으로 표시한다. Loader 이동 버튼은 HMI가 조작 소스이고 제어권과 유효한 Loader 피드백을 확보한 Ready 상태에서 활성화된다. 가상 모델의 끝단 유지 동작은 시험 구성에서 검증한다.
+
+수동 화면의 축 이름은 X·Y·Z로 표시한다. 화면의 X는 논리 축 X1에 대응한다.
 
 Sync 수동 화면에는 실제 위치를 주로 표시하고 가상 위치를 함께 표시한다. HMI의 수동 조작 방식은 Jog/Positioning이다. 상태 스트림의 연결 여부와 Motion Server의 연결·장치 피드백 상태를 구분해 표시한다. Diagnostics의 위치 차이는 실제−가상이다. Digital Twin 연결 단절과 충돌 Fault를 구분해 표시하며 Fault 상세에서 복구 조치를 안내한다. 이벤트 이력에는 Fault 발생·해제, 연결·제어권 변경과 초기화·Pairing·Alignment 작업을 표시한다. [시스템 사양 §12](../../../specifications/DT_Demo_System_Specification.md#12-hmi-기능-사양)

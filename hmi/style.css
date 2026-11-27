@@ -25,6 +25,7 @@ input { width: 10rem; }
 table { width: 100%; border-collapse: collapse; }
 th, td { padding: .55rem; text-align: left; border-bottom: 1px solid #ccd9e2; }
 td .actions { min-width: 13rem; }
+#axes label { white-space: nowrap; }
 input.selected { width: auto; min-height: auto; }
 input.target { width: 6rem; }
 .mode { margin-top: .8rem; }
