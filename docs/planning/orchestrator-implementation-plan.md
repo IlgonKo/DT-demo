@@ -109,7 +109,7 @@ M1에는 Parameter Pairing/State Alignment 자동화가 없으므로 초기 위�
 
 첫 연결에서는 준비된 환경의 실제 가상축 매핑과 응답·피드백부터 확인한다. 실축 Sync와 Omniverse 연동은 M1 통합 항목으로 따로 검증한다. HMI 독립 Quick Stop은 통합 대상 Motion Server 버전의 호출 경로를 확인한 뒤 시험한다.
 
-가상 X1 단축과 가상 3축 PP/PV 시험 결과를 기록했다. Loader는 후속 L2 검증 범위다.
+가상 X1 단축, 가상 3축 PP/PV, 가상 Loader 수동 운전의 L2 시험 결과를 기록했다. 가상 Loader는 HMI와 DualSense 양방향 이동, 끝단 센서·밸브 출력, X1·Y·Z를 포함한 공통 Stop을 검증했다. [가상 Loader 검증 기록](../validation/2026-11-27-virtual-loader-manual.md)
 
 ## 7. 외부 의존성 및 Risk
 

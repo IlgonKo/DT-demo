@@ -6,7 +6,8 @@ from orchestrator.devices.device_manager import AXES
 from orchestrator.interfaces.motion_server.client import MotionRejected
 from orchestrator.operations.manual_controller import Execution, ManualController
 
-MOTION_ACTIONS = {'home', 'pp', 'jog', 'pv'}
+MOTION_ACTIONS = {'home', 'pp', 'jog', 'pv', 'loader'}
+AXIS_MOTION_ACTIONS = MOTION_ACTIONS - {'loader'}
 
 
 class CommandRejected(Exception):
@@ -29,6 +30,7 @@ class SystemController:
         self.task = None
         self.update = asyncio.Event()
         self.pendant_connected = False
+        self.loader_stop_confirmation = None
 
     def receive_feedback(self, payload):
         self.devices.update(payload)
@@ -37,25 +39,35 @@ class SystemController:
         axes = self.devices.axes
         faulted = [name for name, axis in axes.items() if axis.fault]
         fault = f'가상 축 Fault: {", ".join(faulted)}' if faulted else self.devices.server_fault
+        loader = self.devices.loader
+        if not fault and loader and loader.conflicting:
+            fault = 'Loader 양단 센서 또는 밸브 출력 동시 ON'
         executing = self.execution and self.execution.action in MOTION_ACTIONS
         if fault:
             self.fault = fault
             self.state = 'Fault'
             if executing:
                 self.stop_after_fault()
-        elif executing and not self.devices.authority:
-            self.cancel()
+        elif self.execution and (executing or self.execution.stop_loader) and not self.devices.authority:
+            self.disconnected_execution()
             self.fault = '운전 중 Motion Server 제어권 상실'
             self.state = 'Fault'
-        elif self.state == 'Init' and len(axes) == len(AXES) and all(not a.moving for a in axes.values()):
+        elif (self.state == 'Init' and len(axes) == len(AXES)
+              and all(not axis.moving for axis in axes.values())
+              and (not self.devices.loader_mapping or loader)):
             self.state = 'Ready'
 
     def disconnected(self, reason):
         self.devices.disconnect()
         if self.state != 'Init':
-            self.cancel()
+            self.disconnected_execution()
             self.state = 'Fault'
             self.fault = reason
+
+    def disconnected_execution(self):
+        execution = self.cancel()
+        if execution and (execution.action == 'loader' or execution.stop_loader):
+            self.loader_stop_confirmation = 'unconfirmed'
 
     async def wait_feedback(self, names, predicate, after=None):
         baseline = self.devices.version if after is None else after
@@ -94,8 +106,8 @@ class SystemController:
             axes = AXES
         if axes is None:
             axes = ('X1',)
-        axes = tuple(axes)
-        if (not axes or len(set(axes)) != len(axes)
+        axes = () if action == 'loader' else tuple(axes)
+        if ((not axes and action != 'loader') or len(set(axes)) != len(axes)
                 or any(name not in self.devices.mapping for name in axes)
                 or (action in {'home', 'jog'} and len(axes) != 1)):
             raise CommandRejected('유효한 축을 선택하세요.')
@@ -118,8 +130,19 @@ class SystemController:
                 raise CommandRejected('현재 상태에서 제어권을 변경할 수 없습니다.')
         elif self.state != 'Ready' or source != self.source or not self.devices.authority:
             raise CommandRejected('Ready 상태, 선택된 조작 소스 및 제어권을 확인하세요.')
-        if action in MOTION_ACTIONS and any(not self.devices.axes[name].enabled for name in axes):
+        if action in AXIS_MOTION_ACTIONS and any(not self.devices.axes[name].enabled for name in axes):
             raise CommandRejected('대상 축의 Servo를 모두 켜세요.')
+        if action == 'loader':
+            if not self.devices.loader or self.devices.loader.conflicting:
+                raise CommandRejected('가상 Loader의 매핑과 유효한 I/O 피드백이 필요합니다.')
+            if not self.devices.loader_mapping.endpoint_hold_verified:
+                raise CommandRejected('가상 Loader의 양쪽 끝단 유지 동작을 먼저 검증하세요.')
+            if data.get('direction') not in {'initial', 'opposite'}:
+                raise CommandRejected('Loader 이동 방향을 지정하세요.')
+            self.loader_stop_confirmation = None
+        if action == 'recover' and self.loader_stop_confirmation == 'unconfirmed':
+            if not self.devices.loader_stopped:
+                raise CommandRejected('Loader 정지를 먼저 확인하세요.')
         inputs = data.get('inputs', {})
         if action == 'pv' and (source != 'Pendant' or not valid_pv_inputs(inputs, axes)):
             raise CommandRejected('올바른 Pendant PV 입력이 필요합니다.')
@@ -131,24 +154,33 @@ class SystemController:
             self.state = 'Running'
         self.start(execution, data)
 
-    def stop(self, source, action='stop', axes=AXES):
+    def stop(self, source, action='stop', axes=AXES, common=True):
         if not self.devices.motion.connected or not self.devices.authority:
             raise CommandRejected('정지 요청에 Motion Server 연결과 제어권이 필요합니다.')
-        if self.execution and self.execution.action == action and set(axes) <= set(self.execution.axes):
+        current = self.execution
+        stop_loader = bool(self.devices.loader_mapping and (
+            (common and action == 'stop') or
+            (current and (current.action == 'loader' or current.stop_loader))
+        ))
+        if (current and current.action == action and set(axes) <= set(current.axes)
+                and (current.stop_loader or not stop_loader)):
             return
         old = self.cancel()
         if old and action == 'disable' and old.action in MOTION_ACTIONS:
             axes = tuple(dict.fromkeys((*axes, *old.axes)))
         if self.state != 'Fault':
             self.state = 'Running'
+        if stop_loader:
+            self.loader_stop_confirmation = 'pending'
         jog_axis = old.jog_axis if old and old.jog_axis in axes else None
-        self.start(Execution(action, source, axes=axes, jog_axis=jog_axis), {})
+        self.start(Execution(action, source, axes=axes, jog_axis=jog_axis,
+                             stop_loader=stop_loader), {})
 
     def stop_after_fault(self):
         try:
             self.stop('System')
         except CommandRejected:
-            self.cancel()
+            self.disconnected_execution()
 
     def start(self, execution, data):
         self.notice = None
@@ -164,21 +196,22 @@ class SystemController:
         action = execution.action
         try:
             async with asyncio.timeout_at(deadline):
-                if action == 'stop':
-                    await self.devices.stop(execution.axes, execution.jog_axis)
-                    await self.wait_feedback(execution.axes, lambda states: all(
-                        not axis.moving for axis in states.values()
-                    ))
+                if execution.stop_loader:
+                    results = await asyncio.gather(self.stop_loader(),
+                                                   self.execute_axes_or_manual(execution, data),
+                                                   return_exceptions=True)
+                    for result in results:
+                        if isinstance(result, Exception):
+                            raise result
                 else:
-                    await self.manual.execute(execution, data)
+                    await self.execute_axes_or_manual(execution, data)
         except asyncio.CancelledError:
             raise
         except MotionRejected as error:
             self.notice = str(error)
             if action in {'stop', 'disable'}:
-                self.fault = f'정지 미확인: {error}'
-                self.state = 'Fault'
-            elif action in {'pp', 'pv'}:
+                self.record_stop_fault(execution, str(error))
+            elif action in {'pp', 'pv', 'loader'}:
                 self.fault = str(error)
                 self.state = 'Fault'
                 self.stop_after_fault()
@@ -187,16 +220,43 @@ class SystemController:
         except (ConnectionError, ValueError, RuntimeError, TimeoutError) as error:
             self.state = 'Fault'
             detail = str(error) or '피드백 또는 응답 시간 초과'
-            self.fault = f'정지 미확인: {detail}' if action in {'stop', 'disable'} else detail
-            if action in MOTION_ACTIONS:
-                self.stop_after_fault()
+            if action in {'stop', 'disable'}:
+                self.record_stop_fault(execution, detail)
+            else:
+                self.fault = f'Loader 이동: {detail}' if action == 'loader' else detail
+                if action in MOTION_ACTIONS:
+                    self.stop_after_fault()
         else:
             if action == 'recover':
                 self.fault = None
+                if self.loader_stop_confirmation == 'unconfirmed':
+                    self.loader_stop_confirmation = 'confirmed'
             self.state = 'Fault' if self.fault else 'Ready'
         finally:
             if self.execution is execution:
                 self.execution = None
+
+    async def execute_axes_or_manual(self, execution, data):
+        if execution.action == 'stop':
+            await self.devices.stop(execution.axes, execution.jog_axis)
+            await self.wait_feedback(execution.axes, lambda states: all(
+                not axis.moving for axis in states.values()
+            ))
+        else:
+            await self.manual.execute(execution, data)
+
+    async def stop_loader(self):
+        await self.devices.command_loader()
+        await self.wait_feedback((), lambda _: self.devices.loader_stopped)
+        self.loader_stop_confirmation = 'confirmed'
+
+    def record_stop_fault(self, execution, detail):
+        if execution.stop_loader and self.loader_stop_confirmation != 'confirmed':
+            self.loader_stop_confirmation = 'unconfirmed'
+            self.fault = f'Loader 정지 미확인: {detail}'
+        else:
+            self.fault = f'정지 미확인: {detail}'
+        self.state = 'Fault'
 
     def hold(self, source, key, pressed, inputs=None):
         execution = self.execution
@@ -216,7 +276,7 @@ class SystemController:
     def input_lost(self, source):
         if self.execution and self.execution.hold and self.execution.source == source:
             try:
-                self.stop(source, axes=self.execution.axes)
+                self.stop(source, axes=self.execution.axes, common=False)
             except CommandRejected as error:
                 self.cancel()
                 self.state = 'Fault'
@@ -231,6 +291,7 @@ class SystemController:
             await asyncio.sleep(0.05)
 
     def snapshot(self):
+        loader = self.devices.loader
         return {
             'state': self.state, 'target_mode': 'DT', 'operation_mode': 'Manual',
             'source': self.source, 'connected': self.devices.motion.connected,
@@ -239,6 +300,12 @@ class SystemController:
             'pendant_connected': self.pendant_connected,
             'virtual': {name: asdict(axis) | {'enabled': axis.enabled, 'moving': axis.moving}
                         if (axis := self.devices.axes.get(name)) else None for name in AXES},
+            'loader': {
+                'feedback': asdict(loader) | {'endpoint': loader.endpoint, 'conflicting': loader.conflicting}
+                if loader else None,
+                'stop_confirmation': self.loader_stop_confirmation,
+                'endpoint_hold_verified': self.devices.loader_mapping.endpoint_hold_verified,
+            } if self.devices.loader_mapping else None,
             'pendant_mode': self.pendant_mode, 'pendant_axis': self.pendant_axis,
             'pv': self.manual.pv_status,
             'physical': {}, 'auto': None,

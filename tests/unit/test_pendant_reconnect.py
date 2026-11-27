@@ -35,9 +35,9 @@ class PendantReconnectTest(unittest.IsolatedAsyncioTestCase):
             return [call for call in controller.dispatch.call_args_list
                     if call.args[0] == 'jog']
 
-        neutral = ((0.0, 0.0, 0.0), False, False, False)
-        trigger = ((0.0, 0.0, 0.0), True, False, False)
-        stick_held = ((0.8, 0.0, 0.0), True, False, False)
+        neutral = ((0.0, 0.0, 0.0), False, set())
+        trigger = ((0.0, 0.0, 0.0), True, set())
+        stick_held = ((0.8, 0.0, 0.0), True, set())
 
         with patch('orchestrator.interfaces.pendant.input.PendantInput', return_value=reader):
             task = asyncio.create_task(read_pendant(controller))

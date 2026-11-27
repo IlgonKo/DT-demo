@@ -98,6 +98,19 @@ function render() {
       button.disabled = !hold && (!allowed || !axis?.enabled);
     }
   }
+  const loader = snapshot.loader;
+  find('loader-panel').hidden = !loader;
+  if (loader) {
+    const feedback = fresh ? loader.feedback : null;
+    for (const signal of ['initial_sensor', 'opposite_sensor', 'initial_output', 'opposite_output']) {
+      find('loader-' + signal.replace('_', '-')).textContent = feedback ? (feedback[signal] ? 'ON' : 'OFF') : '—';
+    }
+    const stopLabels = {pending: '확인 중', confirmed: '확인됨', unconfirmed: '미확인'};
+    find('loader-stop').textContent = fresh ? (stopLabels[loader.stop_confirmation] || '—') : '—';
+    for (const button of document.querySelectorAll('[data-loader]')) {
+      button.disabled = !allowed || !feedback || feedback.conflicting || !loader.endpoint_hold_verified;
+    }
+  }
   const selection = selectedTargets();
   find('pp').disabled = !allowed || !selection.length ||
     selection.some(([name, position]) => !snapshot.virtual[name]?.enabled || !Number.isFinite(position));
@@ -166,6 +179,9 @@ window.addEventListener('blur', release);
 document.addEventListener('visibilitychange', () => { if (document.hidden) release(); });
 for (const button of document.querySelectorAll('[data-source]')) {
   button.onclick = () => send('source', {source: button.dataset.source});
+}
+for (const button of document.querySelectorAll('[data-loader]')) {
+  button.onclick = () => send('loader', {loader_direction: button.dataset.loader});
 }
 find('claim').onclick = () => send('authority', {enabled: true});
 find('release').onclick = () => send('authority', {enabled: false});

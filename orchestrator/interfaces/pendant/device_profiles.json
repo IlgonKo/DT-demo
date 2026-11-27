@@ -1,0 +1,22 @@
+{
+  "profiles": {
+    "dualsense_windows": {
+      "mapping": {
+        "axes": {
+          "left_x": 0,
+          "left_y": 1,
+          "right_y": 3
+        },
+        "triggers": {
+          "l2": 4
+        },
+        "buttons": {
+          "circle": 1,
+          "triangle": 3,
+          "l1": 9,
+          "r1": 10
+        }
+      }
+    }
+  }
+}

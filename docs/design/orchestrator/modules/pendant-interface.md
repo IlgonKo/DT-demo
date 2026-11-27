@@ -18,6 +18,8 @@ Edge #1에 연결된 DualSense의 연결 상태와 버튼·스틱·Trigger 입�
 
 일반 수동 조작에는 Manual 및 Pendant 선택이 필요하다. Single/Multi Axis 조작 방식 변경은 Ready에서 허용한다. Auto Start는 HMI에 설정된 Auto 모드와 저장 Recipe를 사용한다. 공통 Stop·복구, 티칭, 설정 실행은 각 기능의 허용 조건을 적용한다. Trigger의 직접 Servo On/Off와 스틱에 따른 Jog/PV 실행은 [Manual Controller](manual-controller.md) 사양을 따른다.
 
+DT Manual 기본 매핑에서 L1은 Loader 초기 끝단, R1은 반대 끝단, ○(Circle)는 공통 Stop이다. L1·R1은 현재 모드의 조작 스틱이 중립이고 L2를 놓은 상태에서 새로 누를 때 한 번 실행되며 두 버튼을 동시에 누르면 Loader 지령을 발행하지 않는다. Pendant 연결 또는 소스 전환 후에는 중립 입력을 지나야 일반 조작을 받는다.
+
 Jog/PV 조작 중 Pendant 입력이 끊기면 해당 동작을 Orchestrator가 정지시킨다. 재연결 후에는 새 조작 입력으로만 운전을 시작한다.
 
 ## LED와 햅틱

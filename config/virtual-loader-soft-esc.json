@@ -1,0 +1,10 @@
+{
+  "io": "io0",
+  "input_slot": 1,
+  "output_slot": 2,
+  "initial_sensor": 0,
+  "opposite_sensor": 1,
+  "initial_output": 1,
+  "opposite_output": 0,
+  "endpoint_hold_verified": true
+}

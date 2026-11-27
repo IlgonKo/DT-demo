@@ -13,9 +13,10 @@ router = APIRouter()
 
 
 class Command(BaseModel):
-    action: Literal['authority', 'enable', 'disable', 'home', 'pp', 'jog', 'stop', 'recover', 'source', 'pendant_setup']
+    action: Literal['authority', 'enable', 'disable', 'home', 'pp', 'jog', 'loader', 'stop', 'recover', 'source', 'pendant_setup']
     enabled: bool | None = None
     direction: Literal['positive', 'negative'] | None = None
+    loader_direction: Literal['initial', 'opposite'] | None = None
     positions: dict[Axis, FiniteFloat] | None = None
     axes: list[Axis] | None = None
     pendant_mode: Literal['Single', 'Multi'] | None = None
@@ -48,6 +49,10 @@ async def command(payload: Command, request: Request):
             data = {name: getattr(payload, name) for name in fields}
             if any(value is None for value in data.values()):
                 raise CommandRejected('명령의 필수 입력값을 지정하세요.')
+            if payload.action == 'loader':
+                if payload.loader_direction is None:
+                    raise CommandRejected('Loader 이동 방향을 지정하세요.')
+                data['direction'] = payload.loader_direction
             controller.dispatch(payload.action, axes=payload.axes, **data)
     except CommandRejected as error:
         return rejected(error)

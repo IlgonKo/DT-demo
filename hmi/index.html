@@ -9,7 +9,7 @@
 </head>
 <body>
   <main>
-    <header><h1>DT Demo 수동 운전</h1><span class="tag">DT · 가상 X1/Y/Z</span></header>
+    <header><h1>DT Demo 수동 운전</h1><span class="tag">DT · 가상 장치</span></header>
     <p id="connection" role="status">상태 연결 중</p>
     <section>
       <h2>운전 상태</h2>
@@ -46,6 +46,22 @@
           <button id="pp" disabled>선택 축 PP 실행</button>
         </div>
       </form>
+    </section>
+    <section id="loader-panel" hidden>
+      <h2>가상 Loader</h2>
+      <dl>
+        <div><dt>초기 끝단 센서</dt><dd id="loader-initial-sensor">—</dd></div>
+        <div><dt>반대 끝단 센서</dt><dd id="loader-opposite-sensor">—</dd></div>
+        <div><dt>초기 방향 밸브</dt><dd id="loader-initial-output">—</dd></div>
+        <div><dt>반대 방향 밸브</dt><dd id="loader-opposite-output">—</dd></div>
+        <div><dt>Loader 정지</dt><dd id="loader-stop">—</dd></div>
+      </dl>
+      <div class="actions">
+        <button data-loader="initial" disabled>초기 끝단 이동</button>
+        <button data-loader="opposite" disabled>반대 끝단 이동</button>
+      </div>
+    </section>
+    <section>
       <div class="actions">
         <button id="stop" class="stop">공통 Stop</button>
         <button id="disable">전체 Servo Off</button>

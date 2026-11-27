@@ -1,6 +1,8 @@
 import asyncio
+import json
 import os
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 from uuid import uuid4
 
 from orchestrator.core.system_controller import CommandRejected
@@ -9,10 +11,30 @@ from orchestrator.devices.device_manager import AXES
 
 class PendantInput:
     def __init__(self):
-        self.config = {
-            key: int(os.environ.get(f'DT_PENDANT_{key}', default))
-            for key, default in {'STICK': 0, 'Y': 1, 'Z': 3, 'TRIGGER': 4, 'HOME': 3, 'STOP': 1}.items()
+        default_config = Path(__file__).with_name('config.json')
+        config = json.loads(Path(os.environ.get('DT_PENDANT_CONFIG', default_config))
+                            .read_text(encoding='utf-8'))
+        profiles = json.loads(default_config.with_name('device_profiles.json').read_text(encoding='utf-8'))
+        mapping = profiles['profiles'][config['device']['profile']]['mapping']
+        actions = config['actions']
+        enable = actions['enable']
+        self.axes = tuple(
+            (int(os.environ.get(f'DT_PENDANT_{env_key}', mapping['axes'][config['axes'][name]])),
+             -1 if config['invert'].get(name) else 1)
+            for name, env_key in (('x', 'STICK'), ('y', 'Y'), ('z', 'Z'))
+        )
+        self.trigger = int(os.environ.get('DT_PENDANT_TRIGGER', mapping['triggers'][enable['control']]))
+        self.trigger_threshold = enable['threshold']
+        self.buttons = {
+            name: int(os.environ.get(f'DT_PENDANT_{env_key}', mapping['buttons'][actions[name]]))
+            for name, env_key in (('homing', 'HOME'), ('stop', 'STOP'),
+                                  ('loader_initial', 'LOADER_INITIAL'),
+                                  ('loader_opposite', 'LOADER_OPPOSITE'))
         }
+        axes = [index for index, _ in self.axes] + [self.trigger]
+        if (min(*axes, *self.buttons.values()) < 0 or len(set(axes)) != len(axes)
+                or len(set(self.buttons.values())) != len(self.buttons)):
+            raise ValueError('Pendant 축과 버튼에 서로 다른 유효한 SDL 인덱스가 필요합니다.')
         self.joystick = None
         self.instance_id = None
 
@@ -26,13 +48,14 @@ class PendantInput:
         pygame.joystick.init()
 
     def find_joystick(self):
+        max_axis = max(self.trigger, *(index for index, _ in self.axes))
+        max_button = max(self.buttons.values())
         for index in range(self.pygame.joystick.get_count()):
             candidate = self.pygame.joystick.Joystick(index)
             if not any(name in candidate.get_name().lower()
                        for name in ('dualsense', 'wireless controller', 'ps5')):
                 continue
-            if (max(self.config[key] for key in ('STICK', 'Y', 'Z', 'TRIGGER')) < candidate.get_numaxes()
-                    and max(self.config['HOME'], self.config['STOP']) < candidate.get_numbuttons()):
+            if max_axis < candidate.get_numaxes() and max_button < candidate.get_numbuttons():
                 self.joystick = candidate
                 self.instance_id = candidate.get_instance_id()
                 return
@@ -53,11 +76,9 @@ class PendantInput:
             if self.joystick is None:
                 return None
             return (
-                tuple(self.joystick.get_axis(self.config[key]) * sign
-                      for key, sign in [('STICK', 1), ('Y', -1), ('Z', -1)]),
-                self.joystick.get_axis(self.config['TRIGGER']) > 0.2,
-                bool(self.joystick.get_button(self.config['HOME'])),
-                bool(self.joystick.get_button(self.config['STOP'])),
+                tuple(self.joystick.get_axis(index) * sign for index, sign in self.axes),
+                self.joystick.get_axis(self.trigger) > self.trigger_threshold,
+                {action for action, index in self.buttons.items() if self.joystick.get_button(index)},
             )
         except pygame.error:
             self.joystick = None
@@ -74,8 +95,8 @@ async def read_pendant(controller):
     loop = asyncio.get_running_loop()
     # SDL device discovery and hotplug can block. Keep it off the TCP/lease loop.
     worker = ThreadPoolExecutor(max_workers=1, thread_name_prefix='dt-pendant')
-    active = armed = False
-    previous = (False, False, False)
+    active = armed = previous_trigger = False
+    previous_buttons = set()
     hold = None
     selection = None
 
@@ -93,11 +114,13 @@ async def read_pendant(controller):
             controller.pendant_connected = sample is not None
             if sample is None:
                 controller.input_lost('Pendant')
-                active = armed = False
+                active = armed = previous_trigger = False
                 hold = None
-                previous = (False, False, False)
+                previous_buttons = set()
             else:
-                sticks, trigger, home, stop = sample
+                sticks, trigger, buttons = sample
+                pressed = buttons - previous_buttons
+                stop = 'stop' in buttons
                 selected = controller.source == 'Pendant'
                 current = (controller.pendant_mode, controller.pendant_axis)
                 if current != selection:
@@ -108,7 +131,7 @@ async def read_pendant(controller):
                 raw = sticks if multi else sticks[:1]
                 neutral = all(abs(value) < 0.2 for value in raw)
                 inputs = {name: scale_stick(value) for name, value in zip(axes, raw)}
-                if stop and not previous[2]:
+                if 'stop' in pressed:
                     dispatch('stop')
                 if not selected or not controller.devices.motion.connected or controller.state in {'Init', 'Fault'}:
                     if active or hold:
@@ -116,14 +139,20 @@ async def read_pendant(controller):
                     armed = False
                     hold = None
                 elif not active or not armed:
-                    armed = neutral and not trigger and not home and not stop
+                    armed = neutral and not trigger and not buttons
                 else:
-                    if trigger != previous[0]:
+                    if trigger != previous_trigger and not stop:
                         dispatch('enable' if trigger else 'disable', axes=axes)
                         if not trigger:
                             hold = None
-                    if home and not previous[1] and not multi:
-                        dispatch('home', axes=axes)
+                    if not stop:
+                        if 'homing' in pressed and not multi:
+                            dispatch('home', axes=axes)
+                        loader_buttons = buttons & {'loader_initial', 'loader_opposite'}
+                        if neutral and not trigger and len(loader_buttons) == 1:
+                            button = next(iter(loader_buttons))
+                            if button in pressed:
+                                dispatch('loader', direction=button.removeprefix('loader_'))
                     if neutral or not trigger or stop:
                         if hold:
                             controller.input_lost('Pendant')
@@ -139,7 +168,8 @@ async def read_pendant(controller):
                         if dispatch(action, axes=axes, hold=candidate, **data):
                             hold = candidate
                 active = selected
-                previous = (trigger, home, stop)
+                previous_trigger = trigger
+                previous_buttons = buttons
             await asyncio.sleep(0.02)
     finally:
         controller.input_lost('Pendant')

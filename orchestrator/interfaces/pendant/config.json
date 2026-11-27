@@ -1,0 +1,25 @@
+{
+  "device": {
+    "profile": "dualsense_windows"
+  },
+  "axes": {
+    "x": "left_x",
+    "y": "left_y",
+    "z": "right_y"
+  },
+  "actions": {
+    "enable": {
+      "control": "l2",
+      "threshold": 0.2
+    },
+    "homing": "triangle",
+    "stop": "circle",
+    "loader_initial": "l1",
+    "loader_opposite": "r1"
+  },
+  "invert": {
+    "x": false,
+    "y": true,
+    "z": true
+  }
+}

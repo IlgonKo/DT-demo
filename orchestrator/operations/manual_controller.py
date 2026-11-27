@@ -12,6 +12,7 @@ class Execution:
     axes: tuple = ()
     jog_axis: str | None = None
     inputs: dict = field(default_factory=dict)
+    stop_loader: bool = False
 
 
 def pv_velocity(request, state, limits, speed, reaction=0.25, margin=0.25):
@@ -63,6 +64,15 @@ class ManualController:
                 not axis.moving and abs(axis.position - positions[name]) <= 0.02
                 for name, axis in states.items()
             ))
+        elif action == 'loader':
+            direction = data['direction']
+            loader = self.devices.loader
+            if not loader or loader.endpoint != direction or not loader.outputs_off:
+                await self.devices.command_loader(direction)
+                await wait((), lambda _: self.devices.loader and self.devices.loader.endpoint == direction)
+                await self.devices.command_loader()
+                await wait((), lambda _: self.devices.loader and self.devices.loader.endpoint == direction
+                           and self.devices.loader.outputs_off)
         elif action == 'home':
             name = axes[0]
             await axis_command('home', name)
@@ -87,7 +97,8 @@ class ManualController:
                 await self.devices.axis_group('fault_reset', faulted)
             await wait(axes, lambda states: not self.devices.server_fault and all(
                 not axis.moving and not axis.fault for axis in states.values()
-            ))
+            ) and (not self.devices.loader_mapping or
+                   (self.devices.loader and not self.devices.loader.conflicting)))
 
     async def run_pv(self, execution):
         names = execution.axes
