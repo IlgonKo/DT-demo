@@ -1,9 +1,11 @@
 const find = (id) => document.getElementById(id);
 const names = ['X1', 'Y', 'Z'];
 const axisLabel = (name) => name === 'X1' ? 'X' : name;
+const receivedTime = new Intl.DateTimeFormat('ko-KR', {timeStyle: 'medium', hour12: false});
 const rows = new Map();
 let snapshot;
 let lastFrame = 0;
+let lastReceivedAt;
 let fresh = false;
 let hold;
 
@@ -70,7 +72,8 @@ function render() {
   const hmi = snapshot.source === 'HMI';
   const ready = fresh && snapshot.connected && snapshot.state === 'Ready' && !snapshot.activity;
   const allowed = ready && hmi && snapshot.authority;
-  find('connection').textContent = !fresh ? '상태 갱신 중단 · 마지막 값'
+  find('connection').textContent = !fresh
+    ? `상태 갱신 중단 · 마지막 값 · ${receivedTime.format(lastReceivedAt)} 수신`
     : snapshot.connected ? 'Motion Server 연결' : 'Motion Server 연결 끊김';
   find('state').textContent = snapshot.state;
   find('source').textContent = snapshot.source;
@@ -103,7 +106,7 @@ function render() {
   const loader = snapshot.loader;
   find('loader-panel').hidden = !loader;
   if (loader) {
-    const feedback = fresh ? loader.feedback : null;
+    const feedback = loader.feedback;
     for (const signal of ['initial_sensor', 'opposite_sensor', 'initial_output', 'opposite_output']) {
       find('loader-' + signal.replace('_', '-')).textContent = feedback ? (feedback[signal] ? 'ON' : 'OFF') : '—';
     }
@@ -116,7 +119,7 @@ function render() {
       find('loader-endpoint').textContent = endpointLabels[feedback.endpoint] || '끝단 미감지';
     }
     const stopLabels = {pending: '확인 중', confirmed: '확인됨', unconfirmed: '미확인'};
-    find('loader-stop').textContent = fresh ? (stopLabels[loader.stop_confirmation] || '요청 없음') : '—';
+    find('loader-stop').textContent = stopLabels[loader.stop_confirmation] || '요청 없음';
     for (const button of document.querySelectorAll('[data-loader]')) {
       button.disabled = !allowed || !feedback || feedback.conflicting || !loader.endpoint_hold_verified;
     }
@@ -143,6 +146,7 @@ function connect() {
   socket.onmessage = ({data}) => {
     snapshot = JSON.parse(data);
     lastFrame = performance.now();
+    lastReceivedAt = Date.now();
     fresh = true;
     render();
   };
